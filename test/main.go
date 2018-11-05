@@ -110,7 +110,7 @@ func main() {
 		if len(dir) > 0 && dir[len(dir)-1:] == "/" {
 			dir = dir[:len(dir)-1]
 		}
-		if len(dir) > 0 && dir[0] == "/" {
+		if len(dir) > 0 && dir[:0] == "/" {
 			dir = dir[1:]
 		}
 		if dir == "" {

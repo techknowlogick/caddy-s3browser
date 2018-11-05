@@ -16,7 +16,15 @@ type Folder struct {
 }
 
 type File struct {
-	Byetes uint64
-	Name   string
-	Date   time.Time
+	Folder string
+	Bytes int64
+	Name  string
+	Date  time.Time
+}
+
+type Config struct {
+	Key      string
+	Bucket   string
+	Secret   string
+	Endpoint string
 }
