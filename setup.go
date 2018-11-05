@@ -98,16 +98,16 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 
 		// STEP ONE Check dir hirearchy
 		// need to split on directory split
-		fmt.Printf("=====start file processing of %s\n", dir)
+		//fmt.Printf("=====start file processing of %s\n", dir)
 		if _, ok := fs[dir]; !ok {
-			fmt.Printf("=====fsdir %s no exist\n", dir)
+			//fmt.Printf("=====fsdir %s no exist\n", dir)
 			tempDir := strings.Split(dir, "/")
 			if len(tempDir) > 0 {
 				tempDir = tempDir[:len(tempDir)-1]
 			}
 			built := ""
 			// also loop through breadcrumb to check those as well
-			fmt.Printf("=====loop over %v\n", tempDir)
+			//fmt.Printf("=====loop over %v\n", tempDir)
 			for _, tempFolder := range tempDir {
 				if len(tempFolder) < 1 {
 					continue
@@ -117,10 +117,10 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 				}else {
 					built = built + "/"+tempFolder+ "/"
 				}
-				fmt.Printf("=====dealing with %s\n", built)
+				//fmt.Printf("=====dealing with %s\n", built)
 				
 				if _, ok2 := fs[built]; !ok2 {
-					fmt.Printf("=========== no exists %s \n",built)
+					//fmt.Printf("=========== no exists %s \n",built)
 					fs[built] = Directory{
 						Path: built+"/",
 						CanGoUp: true,
@@ -129,22 +129,22 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 					count := strings.Count(built, "/")
 					if count > 0 {
 						removeEnd := strings.SplitN(built, "/", count)
-						fmt.Printf("wtf is removeEnd1 %s\n", removeEnd)
+						//fmt.Printf("wtf is removeEnd1 %s\n", removeEnd)
 						if len(removeEnd) > 0 {
 							removeEnd = removeEnd[:len(removeEnd)-1]
 						}
-						fmt.Printf("wtf is removeEnd2 %s\n", removeEnd)
+						//fmt.Printf("wtf is removeEnd2 %s\n", removeEnd)
 						noEnd := strings.Join(removeEnd,"/")+"/"
-						fmt.Printf("wtf is noEnd %s\n", noEnd)
+						//fmt.Printf("wtf is noEnd %s\n", noEnd)
 						tempFs := fs[noEnd]
 						tempFs.Folders = append(tempFs.Folders, Folder{Name: built})
 						fs[noEnd] = tempFs
-						fmt.Printf("injecting %s into %s\n", built, noEnd)
+						//fmt.Printf("injecting %s into %s\n", built, noEnd)
 					} else {
 						tempFs := fs["/"]
 						tempFs.Folders = append(tempFs.Folders, Folder{Name: built+"/"})
 						fs["/"] = tempFs
-						fmt.Printf("injecting %s into %s\n", built+"/", "/")
+						//fmt.Printf("injecting %s into %s\n", built+"/", "/")
 					}
 				}
 			}
