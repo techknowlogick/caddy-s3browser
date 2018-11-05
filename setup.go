@@ -118,7 +118,9 @@ func setup(c *caddy.Controller) error {
 		// add file to directory
 		tempFile := File{Name: file, Bytes: obj.Size, Date: obj.LastModified, Folder: fmt.Sprintf("/%s",dir)}
 		y := fs[dir]
-		y.CanGoUp = true
+		if dir != "/" {
+			y.CanGoUp = true
+		}
 		y.Files = append(y.Files, tempFile)
 		fs[dir] = y
 	}
