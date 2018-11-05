@@ -62,7 +62,7 @@ func setup(c *caddy.Controller) error {
 
 		// STEP ONE Check dir hirearchy
 		// need to split on directory split
-		fmt.Println("=====start file processing")
+		fmt.Printf("=====start file processing of %s\n", dir)
 		if _, ok := fs[dir]; !ok {
 			fmt.Printf("=====fsdir %s no exist\n", dir)
 			tempDir := strings.Split(dir, "/")
@@ -79,13 +79,13 @@ func setup(c *caddy.Controller) error {
 				if len(built) < 1 {
 					built = tempFolder
 				}else {
-					built = built + "/" +tempFolder +"/"
+					built = built + "/"+tempFolder+ "/"
 				}
 				fmt.Printf("=====dealing with %s\n", built)
 				
-				if _, ok2 := fs[built+"/"]; !ok2 {
-					fmt.Printf("=========== no exists %s \n",built+"/")
-					fs[built+"/"] = Directory{
+				if _, ok2 := fs[built]; !ok2 {
+					fmt.Printf("=========== no exists %s \n",built)
+					fs[built] = Directory{
 						Path: built+"/",
 						CanGoUp: true,
 					}
@@ -108,7 +108,7 @@ func setup(c *caddy.Controller) error {
 						tempFs := fs["/"]
 						tempFs.Folders = append(tempFs.Folders, Folder{Name: built+"/"})
 						fs["/"] = tempFs
-						fmt.Printf("injecting %s into %s\n", built, "/")
+						fmt.Printf("injecting %s into %s\n", built+"/", "/")
 					}
 				}
 			}
