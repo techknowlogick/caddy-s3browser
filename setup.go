@@ -4,10 +4,15 @@ import (
 	"strings"
 	"path"
 	"fmt"
+	"time"
 	"html/template"
 	"github.com/mholt/caddy"
 	"github.com/mholt/caddy/caddyhttp/httpserver"
 	"github.com/minio/minio-go"
+)
+
+var (
+	updating bool
 )
 
 func init() {
@@ -19,29 +24,60 @@ func init() {
 
 // setup configures a new S3BROWSER middleware instance.
 func setup(c *caddy.Controller) error {
-	fs := make(map[string]Directory)
+	var err error
 	cfg := httpserver.GetConfig(c)
 
 	b := &Browse{}
-	if err := parse(b, c); err != nil {
+	if err = parse(b, c); err != nil {
 		return err
 	}
+	updating = true
+	b.Fs, err = getFiles(b)
+	updating = false
+	if err != nil {
+		return err
+	}
+	ticker := time.NewTicker(5*time.Minute)
+	go func() {
+		// create more indexes every X minutes based off interval
+		for range ticker.C {
+			if !updating {
+				if b.Fs, err = getFiles(b); err != nil {
+					updating = false
+				}
+			}
+		}
+	}()
 
+	tpl, err := template.New("listing").Parse(defaultTemplate)
+	if err != nil {
+		return err
+	}
+	b.Template = tpl
+
+	cfg.AddMiddleware(func(next httpserver.Handler) httpserver.Handler {
+		b.Next = next
+		return b
+	})
+
+	return nil
+}
+
+func getFiles(b *Browse) (map[string]Directory, error) {
+	updating = true
+	fs := make(map[string]Directory)
 	fs["/"] = Directory{
 		Path: "/",
 		CanGoUp: false,
 	}
-
 	minioClient, err := minio.New(b.Config.Endpoint, b.Config.Key, b.Config.Secret, true)
 	if err != nil {
-		return err
+		return fs, err
 	}
-
-	b.Client = minioClient
 
 	doneCh := make(chan struct{})
 	defer close(doneCh)
-	objectCh := b.Client.ListObjectsV2(b.Config.Bucket, "", true, doneCh)
+	objectCh := minioClient.ListObjectsV2(b.Config.Bucket, "", true, doneCh)
 
 	for obj := range objectCh {
 		// fmt.Println(obj)
@@ -121,26 +157,12 @@ func setup(c *caddy.Controller) error {
 		if dir != "/" {
 			y.CanGoUp = true
 		}
+		y.Path = dir
 		y.Files = append(y.Files, tempFile)
 		fs[dir] = y
-	}
-
-	b.Fs = fs
-
-	fmt.Println(fs)
-
-	tpl, err := template.New("listing").Parse(defaultTemplate)
-	if err != nil {
-		return err
-	}
-	b.Template = tpl
-
-	cfg.AddMiddleware(func(next httpserver.Handler) httpserver.Handler {
-		b.Next = next
-		return b
-	})
-
-	return nil
+	} // end looping through all the files
+	updating = false
+	return fs, nil
 }
 
 func parse(b *Browse, c *caddy.Controller) (err error) {
