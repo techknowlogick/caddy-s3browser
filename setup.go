@@ -314,6 +314,7 @@ const defaultTemplate = `<!DOCTYPE html>
 							</tr>
 						{{ end }}
 						{{ range .Files }}
+							{{ if ne .Name ""}}
 							<tr>
 								<td class="icon">
 									<span class="glyphicon glyphicon-file" aria-hidden="true"></span>
@@ -330,6 +331,7 @@ const defaultTemplate = `<!DOCTYPE html>
 									{{ .HumanModTime "01/02/2006 03:04:05 PM" }}
 								</td>
 							</tr>
+							{{ end }}
 						{{ end }}
 					</tbody>
 				</table>
