@@ -324,10 +324,10 @@ const defaultTemplate = `<!DOCTYPE html>
 									</a>
 								</td>
 								<td class="size">
-									{{ .Bytes }}
+									{{ .HumanSize }}
 								</td>
 								<td class="modified">
-									{{ .Date }}
+									{{ .HumanModTime "01/02/2006 03:04:05 PM" }}
 								</td>
 							</tr>
 						{{ end }}
