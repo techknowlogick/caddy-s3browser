@@ -1,6 +1,7 @@
 package s3browser
 
 import (
+	"strings"
 	"time"
 	"path/filepath"
 	"github.com/dustin/go-humanize"
@@ -31,6 +32,11 @@ type Config struct {
 	Endpoint string
 }
 
+type Node struct {
+	Link string
+	ReadableName string
+}
+
 // HumanSize returns the size of the file as a human-readable string
 // in IEC format (i.e. power of 2 or base 1024).
 func (f File) HumanSize() string {
@@ -53,4 +59,23 @@ func (f Folder) ReadableName() string {
 func cleanUp(s string) string {
 	dir := filepath.Dir(s)
     return filepath.Base(dir)
+}
+
+func (d Directory) Breadcrumbs() []Node {
+	var nodes []Node
+
+	tempDir := strings.Split(d.Path, "/")
+	built := ""
+	for _, tempFolder := range tempDir {
+		if len(tempFolder) < 1 {
+			continue
+		}
+		if len(built) < 1 {
+			built = tempFolder + "/"
+		}else {
+			built = built[:len(built)-1] + "/" + tempFolder + "/"
+		}
+		nodes = append(nodes, Node{Link: built, ReadableName: tempFolder})
+	}
+	return nodes
 }

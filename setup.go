@@ -115,7 +115,7 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 				if len(built) < 1 {
 					built = tempFolder
 				}else {
-					built = built + "/"+tempFolder+ "/"
+					built = built + "/"+ tempFolder + "/"
 				}
 				//fmt.Printf("=====dealing with %s\n", built)
 				
@@ -256,7 +256,16 @@ const defaultTemplate = `<!DOCTYPE html>
 
 		<div class="container-fluid">
 			<ol class="breadcrumb">
-				
+				<li>
+					<a href="/"><span class="glyphicon glyphicon-home" aria-hidden="true"></span></a>
+				</li>
+				{{ range .Breadcrumbs }}
+					<li>
+						<a href="/{{ html .Link }}">
+							{{ html .ReadableName }}
+						</a>
+					</li>
+				{{ end }}
 			</ol>
 
 			<div class="panel panel-default">
