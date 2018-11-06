@@ -306,10 +306,10 @@ const defaultTemplate = `<!DOCTYPE html>
 									</a>
 								</td>
 								<td class="size">
-									-
+									&mdash;
 								</td>
 								<td class="modified">
-									-
+									&mdash;
 								</td>
 							</tr>
 						{{ end }}
