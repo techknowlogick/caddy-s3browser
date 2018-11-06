@@ -46,13 +46,9 @@ func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
 		return http.StatusInternalServerError, err
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
 	buf.WriteTo(w)
 
 	return http.StatusOK, nil
-
-
-	return 200, nil
 }
 
 func (b Browse) formatAsHTML(listing Directory) (*bytes.Buffer, error) {

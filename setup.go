@@ -201,7 +201,7 @@ func StringArg(c *caddy.Controller) (string, error) {
 const defaultTemplate = `<!DOCTYPE html>
 <html>
 	<head>
-		<title>{{ .Path }} | S3 Browser</title>
+		<title>{{ .ReadableName }} | S3 Browser</title>
 
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -302,7 +302,7 @@ const defaultTemplate = `<!DOCTYPE html>
 								</td>
 								<td class="name">
 									<a href="/{{ html .Name }}">
-										{{ html .Name }}
+										{{ .ReadableName }}
 									</a>
 								</td>
 								<td class="size">
@@ -321,7 +321,7 @@ const defaultTemplate = `<!DOCTYPE html>
 								</td>
 								<td class="name">
 									<a href="./{{ html .Name }}">
-										{{ html .Name }}
+										{{ .Name }}
 									</a>
 								</td>
 								<td class="size">
