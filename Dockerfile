@@ -13,10 +13,8 @@ RUN sed -i '/This is where other plugins get plugged in (imported)/a _ "github.c
 FROM alpine:edge
 EXPOSE 80
 
-RUN apk add --no-cache wget mailcap ca-certificates && \
-    mkdir /etc/caddy && \
-    apk add gettext libintl && \
-    mv /usr/bin/envsubst /usr/local/sbin/envsubst 
+RUN apk add --no-cache wget mailcap ca-certificates gettext libintl && \
+    mkdir /etc/caddy
 
 COPY --from=build-env /go/bin/caddy /usr/sbin/caddy
 
