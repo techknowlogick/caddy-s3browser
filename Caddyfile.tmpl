@@ -1,0 +1,14 @@
+:80
+
+s3browser {
+	key ${S3_KEY}
+	secret ${S3_SECRET}
+	bucket ${S3_BUCKET}
+	endpoint ${S3_ENDPOINT:=s3.amazonaws.com}
+}
+
+proxy / ${S3_PROTO:=https}://${S3_HOST} {
+	header_upstream Host ${S3_HOST}
+}
+
+
