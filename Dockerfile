@@ -14,7 +14,9 @@ FROM alpine:edge
 EXPOSE 80
 
 RUN apk add --no-cache wget mailcap ca-certificates && \
-    mkdir /etc/caddy
+    mkdir /etc/caddy && \
+    apk add gettext libintl && \
+    mv /usr/bin/envsubst /usr/local/sbin/envsubst 
 
 COPY --from=build-env /go/bin/caddy /usr/sbin/caddy
 
