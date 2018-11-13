@@ -16,6 +16,9 @@ EXPOSE 80
 RUN apk add --no-cache wget mailcap ca-certificates gettext libintl && \
     mkdir /etc/caddy
 
+ENV S3_ENDPOINT=s3.amazonaws.com \
+    S3_PROTO=https
+
 COPY --from=build-env /go/bin/caddy /usr/sbin/caddy
 
 COPY --from=build-env /go/src/github.com/techknowlogick/caddy-s3browser/Caddyfile.tmpl /etc/caddy/Caddyfile.tmpl
