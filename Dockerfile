@@ -20,4 +20,4 @@ COPY --from=build-env /go/bin/caddy /usr/sbin/caddy
 
 COPY --from=build-env /go/src/github.com/techknowlogick/caddy-s3browser/Caddyfile.tmpl /etc/caddy/Caddyfile.tmpl
 
-CMD /bin/bash -c "envsubst < /etc/caddy/Caddyfile.tmpl > /etc/caddy/Caddyfile && /usr/sbin/caddy -conf /etc/caddy/Caddyfile"
+CMD /bin/sh -c "envsubst < /etc/caddy/Caddyfile.tmpl > /etc/caddy/Caddyfile && /usr/sbin/caddy -conf /etc/caddy/Caddyfile"
