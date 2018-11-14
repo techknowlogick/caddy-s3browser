@@ -7,6 +7,6 @@ s3browser {
 	endpoint ${S3_ENDPOINT}
 }
 
-proxy / ${S3_PROTO}://${S3_HOST} {
+proxy / ${S3_PROTO}://${S3_HOST}${S3_EXTRA} {
 	header_upstream Host ${S3_HOST}
 }
