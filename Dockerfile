@@ -6,7 +6,6 @@ RUN go get -d -v github.com/mholt/caddy/caddy github.com/techknowlogick/caddy-s3
 WORKDIR /go/src/github.com/mholt/caddy/caddy
 
 RUN sed -i '/This is where other plugins get plugged in (imported)/a _ "github.com/techknowlogick/caddy-s3browser"' caddymain/run.go \
- && sed -i '/"cors",/a "s3browser", ' ../caddyhttp/httpserver/plugin.go \
  && go install -v . \
  && /go/bin/caddy -version
 
