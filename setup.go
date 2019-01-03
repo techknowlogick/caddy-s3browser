@@ -1,14 +1,15 @@
 package s3browser
 
 import (
-	"strings"
-	"path"
 	"fmt"
-	"time"
-	"html/template"
 	"github.com/mholt/caddy"
 	"github.com/mholt/caddy/caddyhttp/httpserver"
 	"github.com/minio/minio-go"
+	"html/template"
+	"path"
+	"strconv"
+	"strings"
+	"time"
 )
 
 var (
@@ -37,12 +38,15 @@ func setup(c *caddy.Controller) error {
 	if err != nil {
 		return err
 	}
-	ticker := time.NewTicker(5*time.Minute)
+	ticker := time.NewTicker(5 * time.Minute)
 	go func() {
 		// create more indexes every X minutes based off interval
 		for range ticker.C {
 			if !updating {
+				fmt.Println("updating listing")
 				if b.Fs, err = getFiles(b); err != nil {
+					fmt.Println("error fetching listing")
+					fmt.Println(err)
 					updating = false
 				}
 			}
@@ -67,10 +71,10 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 	updating = true
 	fs := make(map[string]Directory)
 	fs["/"] = Directory{
-		Path: "/",
+		Path:    "/",
 		CanGoUp: false,
 	}
-	minioClient, err := minio.New(b.Config.Endpoint, b.Config.Key, b.Config.Secret, true)
+	minioClient, err := minio.New(b.Config.Endpoint, b.Config.Key, b.Config.Secret, b.Config.Secure)
 	if err != nil {
 		return fs, err
 	}
@@ -80,15 +84,11 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 	objectCh := minioClient.ListObjectsV2(b.Config.Bucket, "", true, doneCh)
 
 	for obj := range objectCh {
-		// fmt.Println(obj)
 		if obj.Err != nil {
 			continue
 		}
-		
+
 		dir, file := path.Split(obj.Key)
-		// if len(dir) > 0 && dir[len(dir)-1:] == "/" {
-		// 	dir = dir[:len(dir)-1]
-		// }
 		if len(dir) > 0 && dir[:0] == "/" {
 			dir = dir[1:]
 		}
@@ -98,53 +98,43 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 
 		// STEP ONE Check dir hirearchy
 		// need to split on directory split
-		//fmt.Printf("=====start file processing of %s\n", dir)
 		if _, ok := fs[dir]; !ok {
-			//fmt.Printf("=====fsdir %s no exist\n", dir)
 			tempDir := strings.Split(dir, "/")
 			if len(tempDir) > 0 {
 				tempDir = tempDir[:len(tempDir)-1]
 			}
 			built := ""
 			// also loop through breadcrumb to check those as well
-			//fmt.Printf("=====loop over %v\n", tempDir)
 			for _, tempFolder := range tempDir {
 				if len(tempFolder) < 1 {
 					continue
 				}
 				if len(built) < 1 {
 					built = tempFolder
-				}else {
-					built = built + "/"+ tempFolder + "/"
+				} else {
+					built = built + "/" + tempFolder + "/"
 				}
-				//fmt.Printf("=====dealing with %s\n", built)
-				
+
 				if _, ok2 := fs[built]; !ok2 {
-					//fmt.Printf("=========== no exists %s \n",built)
 					fs[built] = Directory{
-						Path: built+"/",
+						Path:    built + "/",
 						CanGoUp: true,
 					}
 					// also find parent and inject as a folder
 					count := strings.Count(built, "/")
 					if count > 0 {
 						removeEnd := strings.SplitN(built, "/", count)
-						//fmt.Printf("wtf is removeEnd1 %s\n", removeEnd)
 						if len(removeEnd) > 0 {
 							removeEnd = removeEnd[:len(removeEnd)-1]
 						}
-						//fmt.Printf("wtf is removeEnd2 %s\n", removeEnd)
-						noEnd := strings.Join(removeEnd,"/")+"/"
-						//fmt.Printf("wtf is noEnd %s\n", noEnd)
+						noEnd := strings.Join(removeEnd, "/") + "/"
 						tempFs := fs[noEnd]
 						tempFs.Folders = append(tempFs.Folders, Folder{Name: built})
 						fs[noEnd] = tempFs
-						//fmt.Printf("injecting %s into %s\n", built, noEnd)
 					} else {
 						tempFs := fs["/"]
-						tempFs.Folders = append(tempFs.Folders, Folder{Name: built+"/"})
+						tempFs.Folders = append(tempFs.Folders, Folder{Name: built + "/"})
 						fs["/"] = tempFs
-						//fmt.Printf("injecting %s into %s\n", built+"/", "/")
 					}
 				}
 			}
@@ -152,7 +142,7 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 
 		// STEP Two
 		// add file to directory
-		tempFile := File{Name: file, Bytes: obj.Size, Date: obj.LastModified, Folder: fmt.Sprintf("/%s",dir)}
+		tempFile := File{Name: file, Bytes: obj.Size, Date: obj.LastModified, Folder: fmt.Sprintf("/%s", dir)}
 		y := fs[dir]
 		if dir != "/" {
 			y.CanGoUp = true
@@ -168,6 +158,7 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 func parse(b *Browse, c *caddy.Controller) (err error) {
 	c.RemainingArgs()
 	b.Config = Config{}
+	b.Config.Secure = true
 	for c.NextBlock() {
 		var err error
 		switch c.Val() {
@@ -179,6 +170,8 @@ func parse(b *Browse, c *caddy.Controller) (err error) {
 			b.Config.Endpoint, err = StringArg(c)
 		case "bucket":
 			b.Config.Bucket, err = StringArg(c)
+		case "secure":
+			b.Config.Secure, err = BoolArg(c)
 		default:
 			return c.Errf("Unknown s3browser arg: %s", c.Val())
 		}
@@ -196,6 +189,14 @@ func StringArg(c *caddy.Controller) (string, error) {
 		return "", c.ArgErr()
 	}
 	return args[0], nil
+}
+
+func BoolArg(c *caddy.Controller) (bool, error) {
+	args := c.RemainingArgs()
+	if len(args) != 1 {
+		return true, c.ArgErr()
+	}
+	return strconv.ParseBool(args[0])
 }
 
 const defaultTemplate = `<!DOCTYPE html>

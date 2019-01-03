@@ -1,10 +1,10 @@
 package s3browser
 
 import (
+	"github.com/dustin/go-humanize"
+	"path/filepath"
 	"strings"
 	"time"
-	"path/filepath"
-	"github.com/dustin/go-humanize"
 )
 
 type Directory struct {
@@ -20,9 +20,9 @@ type Folder struct {
 
 type File struct {
 	Folder string
-	Bytes int64
-	Name  string
-	Date  time.Time
+	Bytes  int64
+	Name   string
+	Date   time.Time
 }
 
 type Config struct {
@@ -30,10 +30,11 @@ type Config struct {
 	Bucket   string
 	Secret   string
 	Endpoint string
+	Secure   bool
 }
 
 type Node struct {
-	Link string
+	Link         string
 	ReadableName string
 }
 
@@ -48,7 +49,6 @@ func (f File) HumanModTime(format string) string {
 	return f.Date.Format(format)
 }
 
-
 func (d Directory) ReadableName() string {
 	return cleanUp(d.Path)
 }
@@ -58,7 +58,7 @@ func (f Folder) ReadableName() string {
 
 func cleanUp(s string) string {
 	dir := filepath.Dir(s)
-    return filepath.Base(dir)
+	return filepath.Base(dir)
 }
 
 func (d Directory) Breadcrumbs() []Node {
@@ -72,7 +72,7 @@ func (d Directory) Breadcrumbs() []Node {
 		}
 		if len(built) < 1 {
 			built = tempFolder + "/"
-		}else {
+		} else {
 			built = built[:len(built)-1] + "/" + tempFolder + "/"
 		}
 		nodes = append(nodes, Node{Link: built, ReadableName: tempFolder})
