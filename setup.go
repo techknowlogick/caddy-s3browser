@@ -6,6 +6,8 @@ import (
 	"github.com/mholt/caddy/caddyhttp/httpserver"
 	"github.com/minio/minio-go"
 	"html/template"
+	"net/http"
+	"crypto/tls"
 	"path"
 	"strconv"
 	"strings"
@@ -77,6 +79,13 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 	minioClient, err := minio.New(b.Config.Endpoint, b.Config.Key, b.Config.Secret, b.Config.Secure)
 	if err != nil {
 		return fs, err
+	}
+	
+	if !b.Config.Secure {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		minioClient.SetCustomTransport(tr)
 	}
 
 	doneCh := make(chan struct{})
