@@ -81,7 +81,7 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 
 	doneCh := make(chan struct{})
 	defer close(doneCh)
-	objectCh := minioClient.ListObjectsV2(b.Config.Bucket, "", true, doneCh)
+	objectCh := minioClient.ListObjects(b.Config.Bucket, "", true, doneCh)
 
 	for obj := range objectCh {
 		if obj.Err != nil {
