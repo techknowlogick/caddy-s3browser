@@ -31,6 +31,7 @@ type Config struct {
 	Secret   string
 	Endpoint string
 	Secure   bool
+	Refresh  string
 }
 
 type Node struct {

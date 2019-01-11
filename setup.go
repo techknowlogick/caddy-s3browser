@@ -1,13 +1,13 @@
 package s3browser
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/mholt/caddy"
 	"github.com/mholt/caddy/caddyhttp/httpserver"
 	"github.com/minio/minio-go"
 	"html/template"
 	"net/http"
-	"crypto/tls"
 	"path"
 	"strconv"
 	"strings"
@@ -40,14 +40,18 @@ func setup(c *caddy.Controller) error {
 	if err != nil {
 		return err
 	}
-	ticker := time.NewTicker(5 * time.Minute)
+	var duration time.Duration
+	duration, err = time.ParseDuration(b.Config.Refresh)
+	if err != nil {
+		fmt.Println("error parsing refresh, falling back to default of 5 minutes")
+		duration = 5 * time.Minute
+	}
+	ticker := time.NewTicker(duration)
 	go func() {
 		// create more indexes every X minutes based off interval
 		for range ticker.C {
 			if !updating {
-				fmt.Println("updating listing")
 				if b.Fs, err = getFiles(b); err != nil {
-					fmt.Println("error fetching listing")
 					fmt.Println(err)
 					updating = false
 				}
@@ -80,7 +84,7 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 	if err != nil {
 		return fs, err
 	}
-	
+
 	if !b.Config.Secure {
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -181,6 +185,8 @@ func parse(b *Browse, c *caddy.Controller) (err error) {
 			b.Config.Bucket, err = StringArg(c)
 		case "secure":
 			b.Config.Secure, err = BoolArg(c)
+		case "refresh":
+			b.Config.Refresh, err = StringArg(c)
 		default:
 			return c.Errf("Unknown s3browser arg: %s", c.Val())
 		}
