@@ -9,8 +9,8 @@ dl.example.com {
 		bucket ADDBUCKETHERE
 		endpoint nyc3.digitaloceanspaces.com
 		secure true
-    refresh 5m
-  }
+		refresh 5m
+	}
 	proxy / https://examplebucket.nyc3.digitaloceanspaces.com {
 		header_upstream Host examplebucket.nyc3.digitaloceanspaces.com
 	}
