@@ -41,6 +41,9 @@ func setup(c *caddy.Controller) error {
 		return err
 	}
 	var duration time.Duration
+	if b.Config.Refresh == "" {
+		b.Config.Refresh = "5m"
+	}
 	duration, err = time.ParseDuration(b.Config.Refresh)
 	if err != nil {
 		fmt.Println("error parsing refresh, falling back to default of 5 minutes")
