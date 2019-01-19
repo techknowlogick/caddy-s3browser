@@ -5,6 +5,8 @@ s3browser {
 	secret ${S3_SECRET}
 	bucket ${S3_BUCKET}
 	endpoint ${S3_ENDPOINT}
+	secure ${S3_SECURE}
+	refresh ${S3_REFRESH}
 }
 
 proxy / ${S3_PROTO}://${S3_HOST}${S3_EXTRA} {
