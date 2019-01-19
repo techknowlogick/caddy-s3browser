@@ -16,7 +16,9 @@ RUN apk add --no-cache wget mailcap ca-certificates gettext libintl && \
     mkdir /etc/caddy
 
 ENV S3_ENDPOINT=s3.amazonaws.com \
-    S3_PROTO=https
+    S3_PROTO=https \
+    S3_SECURE=true \
+    S3_REFRESH=5s
 
 COPY --from=build-env /go/bin/caddy /usr/sbin/caddy
 
