@@ -137,8 +137,8 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 			// TODO: loop through folders and ensure they are in the tree
 			// make sure to add folder to parent as well
 			foldersLen := len(folders)
-			for i := 0; i < foldersLen; i++ {
-				if i == 0 {
+			for i := 1; i <= foldersLen; i++ {
+				if i == 1 {
 					continue
 					// continue to next loop bc first is root
 				}
@@ -199,8 +199,8 @@ func getPath(s []string, i int) string {
 		return joinFolders(s)
 	}
 	// set i empty, then trim after i
-	s[(i+2)] = ""
-	return joinFolders(s[:(i+2)])
+	s[i] = ""
+	return joinFolders(s[:(i+1)])
 }
 
 func parse(b *Browse, c *caddy.Controller) (err error) {
