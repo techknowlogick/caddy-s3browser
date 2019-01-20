@@ -3,7 +3,7 @@ FROM golang:alpine AS build-env
 
 RUN apk add --no-cache git 
 RUN go get -d -v github.com/mholt/caddy/caddy
-ADD . /go/src/github.com/github.com/techknowlogick/caddy-s3browser
+ADD . /go/src/github.com/techknowlogick/caddy-s3browser
 WORKDIR /go/src/github.com/mholt/caddy/caddy
 
 RUN sed -i '/This is where other plugins get plugged in (imported)/a _ "github.com/techknowlogick/caddy-s3browser"' caddymain/run.go \
