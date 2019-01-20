@@ -195,7 +195,7 @@ func getParent(s []string, i int) string {
 
 func getPath(s []string, i int) string {
 	sLen := len(s)
-	if sLen == i {
+	if sLen >= i {
 		return joinFolders(s)
 	}
 	// set i empty, then trim after i
