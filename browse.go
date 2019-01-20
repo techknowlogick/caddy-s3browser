@@ -3,9 +3,9 @@ package s3browser
 import (
 	"bytes"
 	"fmt"
-	"net/http"
 	"html/template"
-	
+	"net/http"
+
 	"github.com/mholt/caddy/caddyhttp/httpserver"
 	"github.com/minio/minio-go"
 )
@@ -31,12 +31,12 @@ func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
 		return b.Next.ServeHTTP(w, r)
 	}
 	switch r.Method {
-		case http.MethodGet, http.MethodHead:
-			// proceed, noop
-		case "PROPFIND", http.MethodOptions:
-			return http.StatusNotImplemented, nil
-		default:
-			return b.Next.ServeHTTP(w, r)
+	case http.MethodGet, http.MethodHead:
+		// proceed, noop
+	case "PROPFIND", http.MethodOptions:
+		return http.StatusNotImplemented, nil
+	default:
+		return b.Next.ServeHTTP(w, r)
 	}
 
 	var buf *bytes.Buffer
