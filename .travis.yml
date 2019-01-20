@@ -21,4 +21,5 @@ before_install:
 script:
   - sleep 5
   - docker logs s3browser
+  - docker logs minio
   - curl -v localhost
