@@ -20,7 +20,8 @@ before_install:
   - wget https://dl.minio.io/client/mc/release/linux-amd64/mc
   - chmod +x mc
   - ./mc --insecure config host add mytest http://127.0.0.1:9000 AKIAIOSFODNN7EXAMPLE EXAMPLEKEYEXAMPLEKEY
-  - ./mc --insecure ls mytest
+  - ./mc policy public mytest/testing
+  - ./mc --insecure ls mytest/testing
 
 script:
   - sleep 5
