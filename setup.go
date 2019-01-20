@@ -34,8 +34,19 @@ func setup(c *caddy.Controller) error {
 	if err = parse(b, c); err != nil {
 		return err
 	}
+	if b.Config.Debug {
+		fmt.Println("Config:")
+		fmt.Println(b.Config)
+	}
 	updating = true
+	if b.Config.Debug {
+		fmt.Println("Fetching Files..")
+	}
 	b.Fs, err = getFiles(b)
+	if b.Config.Debug {
+		fmt.Println("Files...")
+		fmt.Println(b.Fs)
+	}
 	updating = false
 	if err != nil {
 		return err
@@ -54,6 +65,9 @@ func setup(c *caddy.Controller) error {
 		// create more indexes every X minutes based off interval
 		for range ticker.C {
 			if !updating {
+				if b.Config.Debug {
+					fmt.Println("Updating Files..")
+				}
 				if b.Fs, err = getFiles(b); err != nil {
 					fmt.Println(err)
 					updating = false
@@ -81,7 +95,6 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 	fs := make(map[string]Directory)
 	fs["/"] = Directory{
 		Path:    "/",
-		CanGoUp: false,
 	}
 	minioClient, err := minio.New(b.Config.Endpoint, b.Config.Key, b.Config.Secret, b.Config.Secure)
 	if err != nil {
@@ -105,76 +118,96 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 		}
 
 		dir, file := path.Split(obj.Key)
-		if len(dir) > 0 && dir[:0] == "/" {
-			dir = dir[1:]
+		if len(dir) > 0 && dir[:0] != "/" {
+			dir = "/" + dir
 		}
 		if dir == "" {
-			dir = "/"
+			dir = "/" // if dir is empty, then set to root
 		}
+		// Note: dir should start & end with / now
 
-		// STEP ONE Check dir hirearchy
-		// need to split on directory split
-		if _, ok := fs[dir]; !ok {
-			tempDir := strings.Split(dir, "/")
-			if len(tempDir) > 0 {
-				tempDir = tempDir[:len(tempDir)-1]
-			}
-			built := ""
-			// also loop through breadcrumb to check those as well
-			for _, tempFolder := range tempDir {
-				if len(tempFolder) < 1 {
-					continue
-				}
-				if len(built) < 1 {
-					built = tempFolder
-				} else {
-					built = built + "/" + tempFolder + "/"
+		
+
+		if len(getFolders(dir)) < 3 {
+			// files are in root
+			// less than three bc "/" split becomes ["",""]
+			// Do nothing as file will get added below & root already exists
+		} else {
+			// TODO: loop through folders and ensure they are in the tree
+			// make sure to add folder to parent as well
+			foldersLen := len(getFolders(dir))
+			for i := 2; i < foldersLen; i++ {
+				parent := getParent(getFolders(dir), i)
+				folder := getFolder(getFolders(dir), i)
+				if b.Config.Debug {
+					fmt.Printf("folders: %q i: %d parent: %s folder: %s\n", getFolders(dir), i, parent, folder)	
 				}
 
-				if _, ok2 := fs[built]; !ok2 {
-					fs[built] = Directory{
-						Path:    built + "/",
-						CanGoUp: true,
-					}
-					// also find parent and inject as a folder
-					count := strings.Count(built, "/")
-					if count > 0 {
-						removeEnd := strings.SplitN(built, "/", count)
-						if len(removeEnd) > 0 {
-							removeEnd = removeEnd[:len(removeEnd)-1]
-						}
-						noEnd := strings.Join(removeEnd, "/") + "/"
-						tempFs := fs[noEnd]
-						tempFs.Folders = append(tempFs.Folders, Folder{Name: built})
-						fs[noEnd] = tempFs
-					} else {
-						tempFs := fs["/"]
-						tempFs.Folders = append(tempFs.Folders, Folder{Name: built + "/"})
-						fs["/"] = tempFs
+				// check if parent exists
+				if _, ok := fs[parent]; !ok {
+					// create parent
+					fs[parent] = Directory{
+						Path:    parent,
+						Folders: []Folder{Folder{Name: getFolder(getFolders(dir), i)}},
 					}
 				}
+				// check if folder itself exists
+				if _, ok := fs[folder]; !ok {
+					// create parent
+					fs[folder] = Directory{
+						Path:    folder,
+					}
+					tmp := fs[parent]
+					tmp.Folders = append(fs[parent].Folders, Folder{Name: getFolder(getFolders(dir), i)})
+					fs[parent] = tmp
+				}
 			}
-		} // if hierachy exists?
+		}
 
 		// STEP Two
 		// add file to directory
-		tempFile := File{Name: file, Bytes: obj.Size, Date: obj.LastModified, Folder: fmt.Sprintf("/%s", dir)}
-		y := fs[dir]
-		if dir != "/" {
-			y.CanGoUp = true
-		}
-		y.Path = dir
-		y.Files = append(y.Files, tempFile)
-		fs[dir] = y
+		tempFile := File{Name: file, Bytes: obj.Size, Date: obj.LastModified, Folder: joinFolders(getFolders(dir))}
+		fsCopy := fs[joinFolders(getFolders(dir))]
+		fsCopy.Path = joinFolders(getFolders(dir))
+		fsCopy.Files = append(fsCopy.Files, tempFile) // adding file list of files
+		fs[joinFolders(getFolders(dir))] = fsCopy
 	} // end looping through all the files
 	updating = false
 	return fs, nil
+}
+
+func getFolders(s string) []string {
+	// first and last entry should be empty
+	return strings.Split(s, "/")
+}
+
+func joinFolders(s []string) string {
+	return strings.Join(s, "/")
+}
+
+func getParent(s []string, i int) string {
+	// trim one from end
+	if i < 3 {
+		return "/"
+	}
+	s[i-1]=""
+	return joinFolders(s[0:(i)])
+}
+
+func getFolder(s []string, i int) string {
+	if i < 3 {
+		s[2]=""
+		return joinFolders(s[0:3])
+	}
+	s[i]=""
+	return joinFolders(s[0:(i+1)])
 }
 
 func parse(b *Browse, c *caddy.Controller) (err error) {
 	c.RemainingArgs()
 	b.Config = Config{}
 	b.Config.Secure = true
+	b.Config.Debug = false
 	for c.NextBlock() {
 		var err error
 		switch c.Val() {
@@ -190,6 +223,8 @@ func parse(b *Browse, c *caddy.Controller) (err error) {
 			b.Config.Secure, err = BoolArg(c)
 		case "refresh":
 			b.Config.Refresh, err = StringArg(c)
+		case "debug":
+			b.Config.Debug, err = BoolArg(c)
 		default:
 			return c.Errf("Unknown s3browser arg: %s", c.Val())
 		}
@@ -305,7 +340,7 @@ const defaultTemplate = `<!DOCTYPE html>
 					</thead>
 
 					<tbody>
-						{{ if .CanGoUp }}
+						{{ if ne .Path "/" }}
 							<tr>
 								<td>
 									<span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
@@ -329,7 +364,7 @@ const defaultTemplate = `<!DOCTYPE html>
 									<span class="glyphicon glyphicon-folder-close" aria-hidden="true"></span>
 								</td>
 								<td class="name">
-									<a href="/{{ html .Name }}">
+									<a href="{{ html .Name }}">
 										{{ .ReadableName }}
 									</a>
 								</td>

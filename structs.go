@@ -9,7 +9,6 @@ import (
 
 type Directory struct {
 	Path    string
-	CanGoUp bool
 	Folders []Folder
 	Files   []File
 }
@@ -32,6 +31,7 @@ type Config struct {
 	Endpoint string
 	Secure   bool
 	Refresh  string
+	Debug    bool
 }
 
 type Node struct {

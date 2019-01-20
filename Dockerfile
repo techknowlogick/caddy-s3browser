@@ -3,6 +3,8 @@ FROM golang:alpine AS build-env
 
 RUN apk add --no-cache git 
 RUN go get -d -v github.com/mholt/caddy/caddy github.com/techknowlogick/caddy-s3browser
+# override other files
+ADD . /go/src/github.com/techknowlogick/caddy-s3browser
 WORKDIR /go/src/github.com/mholt/caddy/caddy
 
 RUN sed -i '/This is where other plugins get plugged in (imported)/a _ "github.com/techknowlogick/caddy-s3browser"' caddymain/run.go \
@@ -18,7 +20,8 @@ RUN apk add --no-cache wget mailcap ca-certificates gettext libintl && \
 ENV S3_ENDPOINT=s3.amazonaws.com \
     S3_PROTO=https \
     S3_SECURE=true \
-    S3_REFRESH=5m
+    S3_REFRESH=5m \
+    S3_DEBUG=false
 
 COPY --from=build-env /go/bin/caddy /usr/sbin/caddy
 
