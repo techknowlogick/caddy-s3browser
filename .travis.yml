@@ -8,10 +8,17 @@ services:
 before_install:
   - docker build -t techknowlogick/caddy-s3browser .
   - docker run -d --name minio -p 9000:9000 -e "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE" -e "MINIO_SECRET_KEY=EXAMPLEKEYEXAMPLEKEY" -v /tmp/data:/data minio/minio server /data
+  - mkdir -p /tmp/data/testing/one/two/three/four
+  - touch /tmp/data/testing/main.txt
+  - touch /tmp/data/testing/second.txt
+  - touch /tmp/data/testing/one/one.txt
+  - touch /tmp/data/testing/one/another.txt
+  - touch /tmp/data/testing/one/two/three/textfile.txt
+  - touch /tmp/data/testing/one/two/three/four/last.txt
   - sleep 5
   - docker run -d --name s3browser -p 80:80 -e "S3_KEY=AKIAIOSFODNN7EXAMPLE" -e "S3_SECRET=EXAMPLEKEYEXAMPLEKEY" -e "S3_ENDPOINT=127.0.0.1:9000" -e "S3_HOST=127.0.0.1" -e "S3_EXTRA=:9000" -e "S3_BUCKET=testing" -e "S3_SECURE=false" -e "S3_PROTO=http" -e "S3_REFRESH=1m" techknowlogick/caddy-s3browser
-#  - TODO: create testing bucket
  
 script:
   - sleep 5
   - docker logs s3browser
+  - curl -v localhost
