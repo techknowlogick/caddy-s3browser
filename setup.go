@@ -149,7 +149,7 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 					fs[parent] = Directory{
 						Path:    parent,
 						CanGoUp: true,
-						Folders: Folder{Name: getPath(folders, i)},
+						Folders: []Folder{Folder{Name: getPath(folders, i)}},
 					}
 				}
 				folder := getPath(folders, i)
@@ -200,7 +200,7 @@ func getPath(s []string, i int) string {
 	}
 	// set i empty, then trim after i
 	s[i] = ""
-	return s[:i]
+	return joinFolders(s[:i])
 }
 
 func parse(b *Browse, c *caddy.Controller) (err error) {
