@@ -7,7 +7,7 @@ s3browser {
 	endpoint ${S3_ENDPOINT}
 	secure ${S3_SECURE}
 	refresh ${S3_REFRESH}
-	debug true
+	debug ${S3_DEBUG}
 }
 
 proxy / ${S3_PROTO}://${S3_HOST}${S3_EXTRA} {
