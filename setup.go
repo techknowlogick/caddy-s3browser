@@ -139,7 +139,7 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 			for i := 2; i < foldersLen; i++ {
 				parent := getParent(getFolders(dir), i)
 				folder := getFolder(getFolders(dir), i)
-				if i != 9999 {
+				if b.Config.Debug {
 					fmt.Printf("folders: %q i: %d parent: %s folder: %s\n", getFolders(dir), i, parent, folder)	
 				}
 
@@ -150,11 +150,6 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 						Path:    parent,
 						Folders: []Folder{Folder{Name: getFolder(getFolders(dir), i)}},
 					}
-					// if i == 2 {
-					// 	tmp := fs["/"]
-					// 	tmp.Folders = append(fs["/"].Folders, Folder{Name: getFolder(getFolders(dir), i)})
-					// 	fs["/"] = tmp
-					// }
 				}
 				// check if folder itself exists
 				if _, ok := fs[folder]; !ok {
