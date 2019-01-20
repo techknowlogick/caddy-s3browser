@@ -119,70 +119,88 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 		}
 
 		dir, file := path.Split(obj.Key)
-		if len(dir) > 0 && dir[:0] == "/" {
-			dir = dir[1:]
+		if len(dir) > 0 && dir[:0] != "/" {
+			dir = "/" + dir
 		}
 		if dir == "" {
-			dir = "/"
+			dir = "/" // if dir is empty, then set to root
 		}
+		// Note: dir should start & end with / now
 
-		// STEP ONE Check dir hirearchy
-		// need to split on directory split
-		if _, ok := fs[dir]; !ok {
-			tempDir := strings.Split(dir, "/")
-			if len(tempDir) > 0 {
-				tempDir = tempDir[:len(tempDir)-1]
-			}
-			built := ""
-			// also loop through breadcrumb to check those as well
-			for _, tempFolder := range tempDir {
-				if len(tempFolder) < 1 {
+		folders := getFolders(dir)
+
+		if len(folders) < 3 {
+			// files are in root
+			// less than three bc "/" split becomes ["",""]
+			// Do nothing as file will get added below & root already exists
+		} else {
+			// TODO: loop through folders and ensure they are in the tree
+			// make sure to add folder to parent as well
+			foldersLen := len(folders)
+			for i := 0; i < foldersLen; i++ {
+				if i == 0 {
 					continue
+					// continue to next loop bc first is root
 				}
-				if len(built) < 1 {
-					built = tempFolder
-				} else {
-					built = built + "/" + tempFolder + "/"
+				parent := getParent(folders, i)
+				// check if parent exists
+				if _, ok := fs[parent]; !ok {
+					// create parent
+					fs[parent] = Directory{
+						Path:    parent,
+						CanGoUp: true,
+						Folders: Folder{Name: getPath(folders, i)}
+					}
 				}
-
-				if _, ok2 := fs[built]; !ok2 {
-					fs[built] = Directory{
-						Path:    built + "/",
+				folder := getPath(folders, i)
+				// check if folder itself exists
+				if _, ok := fs[folder]; !ok {
+					// create parent
+					fs[folder] = Directory{
+						Path:    folder,
 						CanGoUp: true,
 					}
-					// also find parent and inject as a folder
-					count := strings.Count(built, "/")
-					if count > 0 {
-						removeEnd := strings.SplitN(built, "/", count)
-						if len(removeEnd) > 0 {
-							removeEnd = removeEnd[:len(removeEnd)-1]
-						}
-						noEnd := strings.Join(removeEnd, "/") + "/"
-						tempFs := fs[noEnd]
-						tempFs.Folders = append(tempFs.Folders, Folder{Name: built})
-						fs[noEnd] = tempFs
-					} else {
-						tempFs := fs["/"]
-						tempFs.Folders = append(tempFs.Folders, Folder{Name: built + "/"})
-						fs["/"] = tempFs
-					}
 				}
 			}
-		} // if hierachy exists?
+		}
 
 		// STEP Two
 		// add file to directory
-		tempFile := File{Name: file, Bytes: obj.Size, Date: obj.LastModified, Folder: fmt.Sprintf("/%s", dir)}
-		y := fs[dir]
-		if dir != "/" {
-			y.CanGoUp = true
+		tempFile := File{Name: file, Bytes: obj.Size, Date: obj.LastModified, Folder: joinFolders(folders)}
+		fsCopy := fs[joinFolders(folders)]
+		if joinFolders(folders) != "/" {
+			fsCopy.CanGoUp = true
 		}
-		y.Path = dir
-		y.Files = append(y.Files, tempFile)
-		fs[dir] = y
+		fsCopy.Path = joinFolders(folders)
+		fsCopy.Files = append(fsCopy.Files, tempFile) // adding file list of files
+		fs[joinFolders(folders)] = fsCopy
 	} // end looping through all the files
 	updating = false
 	return fs, nil
+}
+
+func getFolders(s string) ([]string) {
+	// first and last entry should be empty
+	return strings.Split(s, "/")
+}
+
+func joinFolders(s []string) string {
+	return strings.Join(s, "/")
+}
+
+func getParent(s []string, i int) string {
+	// trim one from end
+	return getPath(s, (i-1))
+}
+
+func getPath(s []string, i int) string {
+	sLen := len(s)
+	if sLen == i {
+		return joinFolders(s)
+	}
+	// set i empty, then trim after i
+	s[i] = ""
+	return s[:i]
 }
 
 func parse(b *Browse, c *caddy.Controller) (err error) {
