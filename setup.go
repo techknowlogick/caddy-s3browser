@@ -95,7 +95,6 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 	fs := make(map[string]Directory)
 	fs["/"] = Directory{
 		Path:    "/",
-		CanGoUp: false,
 	}
 	minioClient, err := minio.New(b.Config.Endpoint, b.Config.Key, b.Config.Secret, b.Config.Secure)
 	if err != nil {
@@ -127,53 +126,56 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 		}
 		// Note: dir should start & end with / now
 
-		folders := getFolders(dir)
+		
 
-		if len(folders) < 3 {
+		if len(getFolders(dir)) < 3 {
 			// files are in root
 			// less than three bc "/" split becomes ["",""]
 			// Do nothing as file will get added below & root already exists
 		} else {
 			// TODO: loop through folders and ensure they are in the tree
 			// make sure to add folder to parent as well
-			foldersLen := len(folders)
-			for i := 1; i <= foldersLen; i++ {
-				if i == 1 {
-					continue
-					// continue to next loop bc first is root
+			foldersLen := len(getFolders(dir))
+			for i := 2; i < foldersLen; i++ {
+				parent := getParent(getFolders(dir), i)
+				folder := getFolder(getFolders(dir), i)
+				if i != 9999 {
+					fmt.Printf("folders: %q i: %d parent: %s folder: %s\n", getFolders(dir), i, parent, folder)	
 				}
-				parent := getParent(folders, i)
+
 				// check if parent exists
 				if _, ok := fs[parent]; !ok {
 					// create parent
 					fs[parent] = Directory{
 						Path:    parent,
-						CanGoUp: true,
-						Folders: []Folder{Folder{Name: getPath(folders, i)}},
+						Folders: []Folder{Folder{Name: getFolder(getFolders(dir), i)}},
 					}
+					// if i == 2 {
+					// 	tmp := fs["/"]
+					// 	tmp.Folders = append(fs["/"].Folders, Folder{Name: getFolder(getFolders(dir), i)})
+					// 	fs["/"] = tmp
+					// }
 				}
-				folder := getPath(folders, i)
 				// check if folder itself exists
 				if _, ok := fs[folder]; !ok {
 					// create parent
 					fs[folder] = Directory{
 						Path:    folder,
-						CanGoUp: true,
 					}
+					tmp := fs[parent]
+					tmp.Folders = append(fs[parent].Folders, Folder{Name: getFolder(getFolders(dir), i)})
+					fs[parent] = tmp
 				}
 			}
 		}
 
 		// STEP Two
 		// add file to directory
-		tempFile := File{Name: file, Bytes: obj.Size, Date: obj.LastModified, Folder: joinFolders(folders)}
-		fsCopy := fs[joinFolders(folders)]
-		if joinFolders(folders) != "/" {
-			fsCopy.CanGoUp = true
-		}
-		fsCopy.Path = joinFolders(folders)
+		tempFile := File{Name: file, Bytes: obj.Size, Date: obj.LastModified, Folder: joinFolders(getFolders(dir))}
+		fsCopy := fs[joinFolders(getFolders(dir))]
+		fsCopy.Path = joinFolders(getFolders(dir))
 		fsCopy.Files = append(fsCopy.Files, tempFile) // adding file list of files
-		fs[joinFolders(folders)] = fsCopy
+		fs[joinFolders(getFolders(dir))] = fsCopy
 	} // end looping through all the files
 	updating = false
 	return fs, nil
@@ -190,17 +192,20 @@ func joinFolders(s []string) string {
 
 func getParent(s []string, i int) string {
 	// trim one from end
-	return getPath(s, (i - 1))
+	if i < 3 {
+		return "/"
+	}
+	s[i-1]=""
+	return joinFolders(s[0:(i)])
 }
 
-func getPath(s []string, i int) string {
-	sLen := len(s)
-	if sLen >= i {
-		return joinFolders(s)
+func getFolder(s []string, i int) string {
+	if i < 3 {
+		s[2]=""
+		return joinFolders(s[0:3])
 	}
-	// set i empty, then trim after i
-	s[i] = ""
-	return joinFolders(s[:(i+1)])
+	s[i]=""
+	return joinFolders(s[0:(i+1)])
 }
 
 func parse(b *Browse, c *caddy.Controller) (err error) {
@@ -340,7 +345,7 @@ const defaultTemplate = `<!DOCTYPE html>
 					</thead>
 
 					<tbody>
-						{{ if .CanGoUp }}
+						{{ if ne .Path "/" }}
 							<tr>
 								<td>
 									<span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
@@ -364,7 +369,7 @@ const defaultTemplate = `<!DOCTYPE html>
 									<span class="glyphicon glyphicon-folder-close" aria-hidden="true"></span>
 								</td>
 								<td class="name">
-									<a href="/{{ html .Name }}">
+									<a href="{{ html .Name }}">
 										{{ .ReadableName }}
 									</a>
 								</td>

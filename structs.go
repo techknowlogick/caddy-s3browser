@@ -9,7 +9,6 @@ import (
 
 type Directory struct {
 	Path    string
-	CanGoUp bool
 	Folders []Folder
 	Files   []File
 }

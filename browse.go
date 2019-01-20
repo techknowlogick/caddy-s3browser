@@ -21,9 +21,6 @@ type Browse struct {
 func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
 
 	path := r.URL.Path
-	if len(path) > 0 {
-		path = path[1:]
-	}
 	if path == "" {
 		path = "/"
 	}
