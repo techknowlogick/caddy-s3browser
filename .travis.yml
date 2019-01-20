@@ -16,7 +16,7 @@ before_install:
   - touch ${TRAVIS_HOME}/data/testing/one/two/three/four/last.txt
   - docker run -d --name minio -p 9000:9000 -e "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE" -e "MINIO_SECRET_KEY=EXAMPLEKEYEXAMPLEKEY" -v ${TRAVIS_HOME}/data:/data minio/minio server /data
   - sleep 5
-  - docker run -d --name s3browser -p 80:80 -e "S3_KEY=AKIAIOSFODNN7EXAMPLE" -e "S3_SECRET=EXAMPLEKEYEXAMPLEKEY" -e "S3_ENDPOINT=127.0.0.1:9000" -e "S3_HOST=127.0.0.1" -e "S3_EXTRA=:9000" -e "S3_BUCKET=testing" -e "S3_SECURE=false" -e "S3_PROTO=http" -e "S3_REFRESH=1m" techknowlogick/caddy-s3browser
+  - docker run -d --name s3browser -p 80:80 -e "S3_KEY=AKIAIOSFODNN7EXAMPLE" -e "S3_SECRET=EXAMPLEKEYEXAMPLEKEY" -e "S3_ENDPOINT=127.0.0.1:9000" -e "S3_HOST=127.0.0.1" -e "S3_EXTRA=:9000" -e "S3_BUCKET=testing" -e "S3_SECURE=false" -e "S3_PROTO=http" -e "S3_REFRESH=5s" techknowlogick/caddy-s3browser
  
 script:
   - sleep 5

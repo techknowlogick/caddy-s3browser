@@ -35,7 +35,14 @@ func setup(c *caddy.Controller) error {
 		return err
 	}
 	updating = true
+	if b.Config.Debug {
+		fmt.Println("Fetching Files..")
+	}
 	b.Fs, err = getFiles(b)
+	if b.Config.Debug {
+		fmt.Println("Files...")
+		fmt.Println(b.Fs)
+	}
 	updating = false
 	if err != nil {
 		return err
@@ -54,6 +61,9 @@ func setup(c *caddy.Controller) error {
 		// create more indexes every X minutes based off interval
 		for range ticker.C {
 			if !updating {
+				if b.Config.Debug {
+					fmt.Println("Updating Files..")
+				}
 				if b.Fs, err = getFiles(b); err != nil {
 					fmt.Println(err)
 					updating = false
@@ -175,6 +185,7 @@ func parse(b *Browse, c *caddy.Controller) (err error) {
 	c.RemainingArgs()
 	b.Config = Config{}
 	b.Config.Secure = true
+	b.Config.Debug = false
 	for c.NextBlock() {
 		var err error
 		switch c.Val() {
@@ -190,6 +201,8 @@ func parse(b *Browse, c *caddy.Controller) (err error) {
 			b.Config.Secure, err = BoolArg(c)
 		case "refresh":
 			b.Config.Refresh, err = StringArg(c)
+		case "debug":
+			b.Config.Debug, err = BoolArg(c)
 		default:
 			return c.Errf("Unknown s3browser arg: %s", c.Val())
 		}

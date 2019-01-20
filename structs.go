@@ -32,6 +32,7 @@ type Config struct {
 	Endpoint string
 	Secure   bool
 	Refresh  string
+	Debug    bool
 }
 
 type Node struct {
