@@ -19,7 +19,7 @@ ENV S3_ENDPOINT=s3.amazonaws.com \
     S3_PROTO=https \
     S3_SECURE=true \
     S3_REFRESH=5m \
-    S3_DEBUG=false
+    S3_DEBUG=true
 
 COPY --from=build-env /go/bin/caddy /usr/sbin/caddy
 
