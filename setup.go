@@ -149,7 +149,7 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 					fs[parent] = Directory{
 						Path:    parent,
 						CanGoUp: true,
-						Folders: Folder{Name: getPath(folders, i)}
+						Folders: Folder{Name: getPath(folders, i),}
 					}
 				}
 				folder := getPath(folders, i)
@@ -166,7 +166,7 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 
 		// STEP Two
 		// add file to directory
-		tempFile := File{Name: file, Bytes: obj.Size, Date: obj.LastModified, Folder: joinFolders(folders)}
+		tempFile := File{Name: file, Bytes: obj.Size, Date: obj.LastModified, Folder: joinFolders(folders),}
 		fsCopy := fs[joinFolders(folders)]
 		if joinFolders(folders) != "/" {
 			fsCopy.CanGoUp = true
