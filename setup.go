@@ -34,10 +34,9 @@ func setup(c *caddy.Controller) error {
 	if err = parse(b, c); err != nil {
 		return err
 	}
-	if b.Config.Debug {
-		fmt.Println("Config:")
-		fmt.Println(b.Config)
-	}
+	
+	fmt.Println("Config:")
+	fmt.Println(b.Config)
 	updating = true
 	if b.Config.Debug {
 		fmt.Println("Fetching Files...")
