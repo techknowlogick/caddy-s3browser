@@ -199,8 +199,8 @@ func getPath(s []string, i int) string {
 		return joinFolders(s)
 	}
 	// set i empty, then trim after i
-	s[i] = ""
-	return joinFolders(s[:i])
+	s[(i+1)] = ""
+	return joinFolders(s[:(i+1)])
 }
 
 func parse(b *Browse, c *caddy.Controller) (err error) {
