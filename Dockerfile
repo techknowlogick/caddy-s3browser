@@ -2,7 +2,8 @@
 FROM golang:alpine AS build-env
 
 RUN apk add --no-cache git 
-RUN go get -d -v github.com/mholt/caddy/caddy
+RUN go get -d -v github.com/mholt/caddy/caddy github.com/techknowlogick/caddy-s3browser
+# override other files
 ADD . /go/src/github.com/techknowlogick/caddy-s3browser
 WORKDIR /go/src/github.com/mholt/caddy/caddy
 
