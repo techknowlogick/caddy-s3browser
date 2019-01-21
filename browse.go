@@ -2,8 +2,10 @@ package s3browser
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"strings"
 	"net/http"
 
 	"github.com/mholt/caddy/caddyhttp/httpserver"
@@ -38,14 +40,34 @@ func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
 
 	var buf *bytes.Buffer
 	var err error
-	if buf, err = b.formatAsHTML(b.Fs[path]); err != nil {
-		fmt.Println(err)
-		return http.StatusInternalServerError, err
+	acceptHeader := strings.ToLower(strings.Join(r.Header["Accept"], ","))
+	switch {
+	case strings.Contains(acceptHeader, "application/json"):
+		if buf, err = b.formatAsJSON(b.Fs[path]); err != nil {
+			return http.StatusInternalServerError, err
+		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	default:
+		if buf, err = b.formatAsHTML(b.Fs[path]); err != nil {
+			fmt.Println(err)
+			return http.StatusInternalServerError, err
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	buf.WriteTo(w)
 
 	return http.StatusOK, nil
+}
+
+func (b Browse) formatAsJSON(listing Directory) (*bytes.Buffer, error) {
+	marsh, err := json.Marshal(listing)
+	if err != nil {
+		return nil, err
+	}
+
+	buf := new(bytes.Buffer)
+	_, err = buf.Write(marsh)
+	return buf, err
 }
 
 func (b Browse) formatAsHTML(listing Directory) (*bytes.Buffer, error) {
