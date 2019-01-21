@@ -94,7 +94,7 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 	updating = true
 	fs := make(map[string]Directory)
 	fs["/"] = Directory{
-		Path:    "/",
+		Path: "/",
 	}
 	minioClient, err := minio.New(b.Config.Endpoint, b.Config.Key, b.Config.Secret, b.Config.Secure)
 	if err != nil {
@@ -126,8 +126,6 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 		}
 		// Note: dir should start & end with / now
 
-		
-
 		if len(getFolders(dir)) < 3 {
 			// files are in root
 			// less than three bc "/" split becomes ["",""]
@@ -140,7 +138,7 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 				parent := getParent(getFolders(dir), i)
 				folder := getFolder(getFolders(dir), i)
 				if b.Config.Debug {
-					fmt.Printf("folders: %q i: %d parent: %s folder: %s\n", getFolders(dir), i, parent, folder)	
+					fmt.Printf("folders: %q i: %d parent: %s folder: %s\n", getFolders(dir), i, parent, folder)
 				}
 
 				// check if parent exists
@@ -155,7 +153,7 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 				if _, ok := fs[folder]; !ok {
 					// create parent
 					fs[folder] = Directory{
-						Path:    folder,
+						Path: folder,
 					}
 					tmp := fs[parent]
 					tmp.Folders = append(fs[parent].Folders, Folder{Name: getFolder(getFolders(dir), i)})
@@ -190,17 +188,17 @@ func getParent(s []string, i int) string {
 	if i < 3 {
 		return "/"
 	}
-	s[i-1]=""
+	s[i-1] = ""
 	return joinFolders(s[0:(i)])
 }
 
 func getFolder(s []string, i int) string {
 	if i < 3 {
-		s[2]=""
+		s[2] = ""
 		return joinFolders(s[0:3])
 	}
-	s[i]=""
-	return joinFolders(s[0:(i+1)])
+	s[i] = ""
+	return joinFolders(s[0:(i + 1)])
 }
 
 func parse(b *Browse, c *caddy.Controller) (err error) {
