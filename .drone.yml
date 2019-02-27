@@ -69,7 +69,7 @@ steps:
     - "envsubst < /drone/src/Caddyfile.tmpl > /drone/src/Caddyfile"
     - cat /drone/src/Caddyfile
     - /go/bin/caddy -conf /drone/src/Caddyfile &
-    - sleep 3
+    - sleep 6
     - "curl -v -H \"Accept: application/json\" localhost"
 
 services:
