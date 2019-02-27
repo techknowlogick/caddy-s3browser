@@ -59,8 +59,6 @@ steps:
 services:
 - name: objectstorage
   image: minio/minio
-  command:
-  - server /data
   environment:
     MINIO_ACCESS_KEY: 51bcaa680ac2fa4bb9f38bde4bf6f5620c542222393f95e2e6f6d38f838e3c17
     MINIO_BROWSER: off
