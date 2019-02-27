@@ -69,7 +69,7 @@ steps:
     - envsubst $CI_WORKSPACE/Caddyfile.tmpl > $CI_WORKSPACE/Caddyfile
     - /go/bin/caddy -conf $CI_WORKSPACE/Caddyfile &
     - sleep 3
-    - curl -v localhost
+    - curl -v localhost:2015
 
 services:
 - name: objectstorage
