@@ -65,7 +65,9 @@ steps:
     - sed -i '/This is where other plugins get plugged in (imported)/a _ "src.techknowlogick.com/caddy-s3browser"' caddymain/run.go
     - go install -v .
     - /go/bin/caddy -version
-    - apk add curl
+    - apk add wget mailcap ca-certificates gettext libintl curl
+    - envsubst $CI_WORKSPACE/Caddyfile.tmpl > $CI_WORKSPACE/Caddyfile
+    - /go/bin/caddy -conf $CI_WORKSPACE/Caddyfile &
     - curl -v localhost
 
 services:
