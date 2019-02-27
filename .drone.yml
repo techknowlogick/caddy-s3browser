@@ -60,6 +60,8 @@ steps:
       S3_PROTO: http
       S3_REFRESH: 25s
     commands:
+    - mkdir -p /go/src/src.techknowlogick.com/
+    - cp $CI_WORKSPACE /go/src/src.techknowlogick.com/caddy-s3browser
     - go get -d -v github.com/mholt/caddy/caddy
     - cd /go/src/github.com/mholt/caddy/caddy
     - sed -i '/This is where other plugins get plugged in (imported)/a _ "src.techknowlogick.com/caddy-s3browser"' caddymain/run.go
