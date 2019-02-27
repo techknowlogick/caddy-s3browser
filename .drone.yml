@@ -36,7 +36,11 @@ steps:
     - mc cp second.txt test/s3browser-test
     - mc cp one.txt test/s3browser-test/one
     - mc cp another.txt test/s3browser-test/one
+    - mc cp another.txt test/s3browser-test/one/two
+    - mc cp another.txt test/s3browser-test/one/two/three
     - mc cp last.txt test/s3browser-test/one/two/three/four
+    - mc rm test/s3browser-test/one/two/another.txt
+    - mc rm test/s3browser-test/one/two/three/another.txt
 
   - name: compile-and-run
     image: golang:1.12
@@ -52,7 +56,11 @@ steps:
       S3_PROTO: http
       S3_REFRESH: 25s
     commands:
-    # - TODO: build caddy & run in daemon mode here
+    - go get -d -v github.com/mholt/caddy/caddy
+    - cd /go/src/github.com/mholt/caddy/caddy
+    - sed -i '/This is where other plugins get plugged in (imported)/a _ "src.techknowlogick.com/caddy-s3browser"' caddymain/run.go
+    - go install -v .
+    - /go/bin/caddy -version
     - apk add curl
     - curl -v localhost
 
