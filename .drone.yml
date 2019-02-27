@@ -66,9 +66,9 @@ steps:
     - sed -i '/This is where other plugins get plugged in (imported)/a _ "src.techknowlogick.com/caddy-s3browser"' caddymain/run.go
     - go install -v .
     - /go/bin/caddy -version
-    - envsubst $CI_WORKSPACE/Caddyfile.tmpl > $CI_WORKSPACE/Caddyfile
-    - cat $CI_WORKSPACE/Caddyfile
-    - /go/bin/caddy -conf $CI_WORKSPACE/Caddyfile &
+    - "envsubst /drone/src/Caddyfile.tmpl > /drone/src/Caddyfile"
+    - cat /drone/src/Caddyfile
+    - /go/bin/caddy -conf /drone/src/Caddyfile &
     - sleep 3
     - curl -v localhost:2015
 
