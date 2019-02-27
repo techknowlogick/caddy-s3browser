@@ -6,10 +6,6 @@ platform:
   os: linux
   arch: amd64
 
-workspace:
-  base: /go
-  path: src/src.techknowlogick.com/caddy-s3browser
-
 steps:
   - name: docker-dry-run
     image: plugins/docker
