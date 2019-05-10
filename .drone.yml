@@ -62,7 +62,7 @@ steps:
     - cp -r $CI_WORKSPACE /go/src/src.techknowlogick.com/caddy-s3browser
     - cd /go/src/src.techknowlogick.com/caddy-s3browser
     - go get ./...
-    - go get -d -v github.com/mholt/caddy/caddy
+    - GO111MODULE=off go get -d -v github.com/mholt/caddy/caddy
     - cd /go/src/github.com/mholt/caddy/caddy
     - sed -i '/This is where other plugins get plugged in (imported)/a _ "src.techknowlogick.com/caddy-s3browser"' caddymain/run.go
     - go install -v .
