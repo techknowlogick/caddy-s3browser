@@ -1,17 +1,12 @@
 # build stage
-FROM golang:alpine AS build-env
+FROM abiosoft/caddy:builder as builder
 
-RUN apk add --no-cache git 
-RUN go get -d -v github.com/mholt/caddy/caddy github.com/techknowlogick/caddy-s3browser
-# override other files
-ADD . /go/src/github.com/techknowlogick/caddy-s3browser
-WORKDIR /go/src/github.com/mholt/caddy/caddy
+# process wrapper
+RUN go get -v github.com/abiosoft/parent
 
-RUN sed -i '/This is where other plugins get plugged in (imported)/a _ "github.com/techknowlogick/caddy-s3browser"' caddymain/run.go \
- && go install -v . \
- && /go/bin/caddy -version
+RUN VERSION="1.0.0" PLUGINS="s3browser" ENABLE_TELEMETRY=false /bin/sh /usr/bin/builder.sh
 
-FROM alpine:edge
+FROM alpine:3.9
 EXPOSE 80
 
 RUN apk add --no-cache wget mailcap ca-certificates gettext libintl && \
