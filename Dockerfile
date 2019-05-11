@@ -18,7 +18,7 @@ ENV S3_ENDPOINT=s3.amazonaws.com \
     S3_REFRESH=5m \
     S3_DEBUG=false
 
-COPY --from=builder /go/bin/caddy /usr/sbin/caddy
+COPY --from=builder /install/caddy /usr/sbin/caddy
 
 COPY Caddyfile.tmpl /etc/caddy/Caddyfile.tmpl
 
