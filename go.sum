@@ -49,6 +49,8 @@ github.com/minio/minio-go v6.0.14+incompatible h1:fnV+GD28LeqdN6vT2XdGKW8Qe/IfjJ
 github.com/minio/minio-go v6.0.14+incompatible/go.mod h1:7guKYtitv8dktvNUGrhzmNlA5wrAABTQXCoesZdFQO8=
 github.com/minio/minio-go v6.0.24+incompatible h1:PXMEEYnhalwvnsULVewRWkXWd3+i4NalsVPhIP2rPUs=
 github.com/minio/minio-go v6.0.24+incompatible/go.mod h1:/haSOWG8hQNx2+JOfLJ9GKp61EAmgPwRVw/Sac0NzaM=
+github.com/minio/minio-go v6.0.25+incompatible h1:bXijc+zVAHUp6UvyQjgv9cG6XT4OohrhPsE/DpJjt5Q=
+github.com/minio/minio-go v6.0.25+incompatible/go.mod h1:/haSOWG8hQNx2+JOfLJ9GKp61EAmgPwRVw/Sac0NzaM=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/naoina/go-stringutil v0.1.0/go.mod h1:XJ2SJL9jCtBh+P9q5btrd/Ylo8XwT/h1USek5+NqSA0=
