@@ -6,5 +6,5 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-ini/ini v1.42.0 // indirect
 	github.com/mholt/caddy v1.0.0
-	github.com/minio/minio-go v6.0.25+incompatible
+	github.com/minio/minio-go v6.0.26+incompatible
 )
