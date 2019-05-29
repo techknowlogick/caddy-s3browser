@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	"github.com/mholt/caddy/caddyhttp/httpserver"
-	"github.com/minio/minio-go"
+	"github.com/minio/minio-go/v6"
 )
 
 type Browse struct {
