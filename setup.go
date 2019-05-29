@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/mholt/caddy"
 	"github.com/mholt/caddy/caddyhttp/httpserver"
-	"github.com/minio/minio-go"
+	"github.com/minio/minio-go/v6"
 	"html/template"
 	"net/http"
 	"path"
