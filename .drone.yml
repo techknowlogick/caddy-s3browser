@@ -28,7 +28,7 @@ steps:
     - echo "test file 123" > second.txt
     - echo "test file 1234" > another.txt
     - echo "test file 12345" > last.txt
-    - mc policy download test/s3browser-test
+    - mc policy set download test/s3browser-test
     - mc cp main.txt test/s3browser-test
     - mc cp second.txt test/s3browser-test
     - mc cp one.txt test/s3browser-test/one/
