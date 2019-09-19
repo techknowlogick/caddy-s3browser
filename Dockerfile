@@ -4,7 +4,7 @@ FROM abiosoft/caddy:builder as builder
 # process wrapper
 RUN go get -v github.com/abiosoft/parent
 
-RUN VERSION="1.0.1" PLUGINS="s3browser" ENABLE_TELEMETRY=false /bin/sh /usr/bin/builder.sh
+RUN VERSION="1.0.3" PLUGINS="s3browser" ENABLE_TELEMETRY=false /bin/sh /usr/bin/builder.sh
 
 FROM alpine:3.10
 EXPOSE 80
