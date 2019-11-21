@@ -73,7 +73,7 @@ steps:
 
 services:
 - name: objectstorage
-  image: minio/minio:RELEASE.2019-02-20T22-44-29Z
+  image: minio/minio:RELEASE.2019-10-12T01-39-57Z
   command:
   - server
   - /data
