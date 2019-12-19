@@ -1,10 +1,18 @@
 # build stage
-FROM abiosoft/caddy:builder as builder
+FROM abiosoft/caddy:builder as abiosoft-builder
+
+FROM golang:1.13-alpine as builder
+
+RUN apk add --no-cache git gcc musl-dev
+
+COPY --from=abiosoft-builder /usr/bin/builder.sh /usr/bin/builder.sh
+
+CMD ["/bin/sh", "/usr/bin/builder.sh"]
 
 # process wrapper
 RUN go get -v github.com/abiosoft/parent
 
-RUN VERSION="1.0.3" PLUGINS="s3browser" ENABLE_TELEMETRY=false /bin/sh /usr/bin/builder.sh
+RUN VERSION="1.0.4" PLUGINS="s3browser" ENABLE_TELEMETRY=false /bin/sh /usr/bin/builder.sh
 
 FROM alpine:3.10
 EXPOSE 80
