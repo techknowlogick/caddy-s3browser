@@ -12,7 +12,7 @@ CMD ["/bin/sh", "/usr/bin/builder.sh"]
 # process wrapper
 RUN go get -v github.com/abiosoft/parent
 
-RUN VERSION="1.0.4" PLUGINS="s3browser" ENABLE_TELEMETRY=false /bin/sh /usr/bin/builder.sh
+RUN VERSION="1.0.4" PLUGINS="github.com/techknowlogick/caddy-s3browser" ENABLE_TELEMETRY=false /bin/sh /usr/bin/builder.sh
 
 FROM alpine:3.11
 EXPOSE 80
