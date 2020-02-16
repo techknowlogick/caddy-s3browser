@@ -70,6 +70,7 @@ steps:
     - /go/bin/caddy -conf /drone/src/Caddyfile &
     - sleep 6
     - "curl -v -H \"Accept: application/json\" localhost"
+    - "curl -v localhost"
 
 services:
 - name: objectstorage
