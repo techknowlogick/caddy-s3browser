@@ -254,150 +254,270 @@ const defaultTemplate = `<!DOCTYPE html>
 <html>
 	<head>
 		<title>{{ .ReadableName }} | S3 Browser</title>
-
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-		<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
-		<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/flat-ui/2.3.0/css/flat-ui.min.css">
-
-		<style>
-			body {
-				cursor: default;
-			}
-
-			.navbar {
-				margin-bottom: 20px;
-			}
-
-			.credits {
-				padding-left: 15px;
-				padding-right: 15px;
-			}
-
-			h1 {
-				font-size: 20px;
-				margin: 0;
-			}
-
-			th .glyphicon {
-				font-size: 15px;
-			}
-
-			table .icon {
-				width: 30px;
-			}
-		</style>
-    <!-- template source from https://raw.githubusercontent.com/dockhippie/caddy/master/rootfs/etc/caddy/browse.tmpl -->
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* { padding: 0; margin: 0; }
+body {
+	font-family: sans-serif;
+	text-rendering: optimizespeed;
+	background-color: #ffffff;
+}
+a {
+	color: #006ed3;
+	text-decoration: none;
+}
+a:hover,
+h1 a:hover {
+	color: #319cff;
+}
+header,
+#summary {
+	padding-left: 5%;
+	padding-right: 5%;
+}
+th:first-child,
+td:first-child {
+	width: 5%;
+}
+th:last-child,
+td:last-child {
+	width: 5%;
+}
+header {
+	padding-top: 25px;
+	padding-bottom: 15px;
+	background-color: #f2f2f2;
+}
+h1 {
+	font-size: 20px;
+	font-weight: normal;
+	white-space: nowrap;
+	overflow-x: hidden;
+	text-overflow: ellipsis;
+	color: #999;
+}
+h1 a {
+	color: #000;
+	margin: 0 4px;
+}
+h1 a:hover {
+	text-decoration: underline;
+}
+h1 a:first-child {
+	margin: 0;
+}
+main {
+	display: block;
+}
+.meta {
+	font-size: 12px;
+	font-family: Verdana, sans-serif;
+	border-bottom: 1px solid #9C9C9C;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+.meta-item {
+	margin-right: 1em;
+}
+#filter {
+	padding: 4px;
+	border: 1px solid #CCC;
+}
+table {
+	width: 100%;
+	border-collapse: collapse;
+}
+tr {
+	border-bottom: 1px dashed #dadada;
+}
+tbody tr:hover {
+	background-color: #ffffec;
+}
+th,
+td {
+	text-align: left;
+	padding: 10px 0;
+}
+th {
+	padding-top: 15px;
+	padding-bottom: 15px;
+	font-size: 16px;
+	white-space: nowrap;
+}
+th a {
+	color: black;
+}
+th svg {
+	vertical-align: middle;
+}
+td {
+	white-space: nowrap;
+	font-size: 14px;
+}
+td:nth-child(2) {
+	width: 80%;
+}
+td:nth-child(3) {
+	padding: 0 20px 0 20px;
+}
+th:nth-child(4),
+td:nth-child(4) {
+	text-align: right;
+}
+td:nth-child(2) svg {
+	position: absolute;
+}
+td .name,
+td .goup {
+	margin-left: 1.75em;
+	word-break: break-all;
+	overflow-wrap: break-word;
+	white-space: pre-wrap;
+}
+.icon {
+	margin-right: 5px;
+}
+.icon.sort {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	position: relative;
+	top: .2em;
+}
+.icon.sort .top {
+	position: absolute;
+	left: 0;
+	top: -1px;
+}
+.icon.sort .bottom {
+	position: absolute;
+	bottom: -1px;
+	left: 0;
+}
+footer {
+	padding: 40px 20px;
+	font-size: 12px;
+	text-align: center;
+}
+@media (max-width: 600px) {
+	.hideable {
+		display: none;
+	}
+	td:nth-child(2) {
+		width: auto;
+	}
+	th:nth-child(3),
+	td:nth-child(3) {
+		padding-right: 5%;
+		text-align: right;
+	}
+	h1 {
+		color: #000;
+	}
+	h1 a {
+		margin: 0;
+	}
+	#filter {
+		max-width: 100px;
+	}
+}
+<!-- template source from https://github.com/caddyserver/caddy/blob/a2d71bdd94c0ca51dfb3b816b61911dac799581f/caddyhttp/browse/setup.go -->
+</style>
 	</head>
 	<body>
-		<nav class="navbar navbar-inverse navbar-static-top">
-			<div class="container-fluid">
-				<div class="navbar-header">
-					<a class="navbar-brand" href="/">
-						S3 Browser
-					</a>
-				</div>
-
-				<div class="navbar-text navbar-right hidden-xs credits">
-					Powered by <a href="https://caddyserver.com">Caddy</a>
-				</div>
-			</div>
-		</nav>
-
-		<div class="container-fluid">
-			<ol class="breadcrumb">
-				<li>
-					<a href="/"><span class="glyphicon glyphicon-home" aria-hidden="true"></span></a>
-				</li>
-				{{ range .Breadcrumbs }}
-					<li>
-						<a href="/{{ html .Link }}">
-							{{ html .ReadableName }}
+		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="0" width="0" style="position: absolute;">
+			<defs>
+				<!-- Folder -->
+				<g id="folder" fill-rule="nonzero" fill="none">
+					<path d="M285.22 37.55h-142.6L110.9 0H31.7C14.25 0 0 16.9 0 37.55v75.1h316.92V75.1c0-20.65-14.26-37.55-31.7-37.55z" fill="#FFA000"/>
+					<path d="M285.22 36H31.7C14.25 36 0 50.28 0 67.74v158.7c0 17.47 14.26 31.75 31.7 31.75H285.2c17.44 0 31.7-14.3 31.7-31.75V67.75c0-17.47-14.26-31.75-31.7-31.75z" fill="#FFCA28"/>
+				</g>
+				<!-- File -->
+				<g id="file" stroke="#000" stroke-width="25" fill="#FFF" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M13 24.12v274.76c0 6.16 5.87 11.12 13.17 11.12H239c7.3 0 13.17-4.96 13.17-11.12V136.15S132.6 13 128.37 13H26.17C18.87 13 13 17.96 13 24.12z"/>
+					<path d="M129.37 13L129 113.9c0 10.58 7.26 19.1 16.27 19.1H249L129.37 13z"/>
+				</g>
+			</defs>
+		</svg>
+		<header>
+			<h1>
+				{{ range $i, $crumb := .Breadcrumbs }}
+						<a href="/{{ html $crumb.Link }}">
+							{{ html $crumb.ReadableName }}
 						</a>
-					</li>
+						{{if ne $i 0}}/{{end}}
 				{{ end }}
-			</ol>
-
-			<div class="panel panel-default">
-				<table class="table table-hover table-striped">
+			</h1>
+		</header>
+		<main>
+			<div class="listing">
+				<table aria-describedby="summary">
 					<thead>
-						<tr>
-							<th class="icon"></th>
-							<th class="name">
-								Name
-							</th>
-							<th class="size col-sm-2">
-								Size
-							</th>
-							<th class="modified col-sm-2">
-								Modified
-							</th>
-						</tr>
+					<tr>
+						<th></th>
+						<th>
+							Name
+						</th>
+						<th>
+							Size
+						</th>
+						<th class="hideable">
+							Modified
+						</th>
+						<th class="hideable"></th>
+					</tr>
 					</thead>
-
 					<tbody>
-						{{ if ne .Path "/" }}
-							<tr>
+					{{ if ne .Path "/" }}
+					<tr>
+						<td></td>
+						<td>
+							<a href="..">
+								<span class="goup">Go up</span>
+							</a>
+						</td>
+						<td>&mdash;</td>
+						<td class="hideable">&mdash;</td>
+						<td class="hideable"></td>
+					</tr>
+					{{- end}}
+					{{ range .Folders }}
+						<tr class="file">
+							<td></td>
+							<td>
+								<a href="{{ html .Name }}">
+									<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 317 259"><use xlink:href="#folder"></use></svg>
+									<span class="name">{{ .ReadableName }}</span>
+								</a>
+							</td>
+							<td>&mdash;</td>
+							<td class="hideable">&mdash;</td>
+							<td class="hideable"></td>
+						</tr>
+					{{ end }}
+					{{ range .Files }}
+						{{ if ne .Name ""}}
+							<tr class="file">
+								<td></td>
 								<td>
-									<span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
-								</td>
-								<td>
-									<a href="..">
-										Go up
-									</a>
-								</td>
-								<td>
-									&mdash;
-								</td>
-								<td>
-									&mdash;
-								</td>
-							</tr>
-						{{ end }}
-						{{ range .Folders }}
-							<tr>
-								<td class="icon">
-									<span class="glyphicon glyphicon-folder-close" aria-hidden="true"></span>
-								</td>
-								<td class="name">
-									<a href="{{ html .Name }}">
-										{{ .ReadableName }}
-									</a>
-								</td>
-								<td class="size">
-									&mdash;
-								</td>
-								<td class="modified">
-									&mdash;
-								</td>
-							</tr>
-						{{ end }}
-						{{ range .Files }}
-							{{ if ne .Name ""}}
-							<tr>
-								<td class="icon">
-									<span class="glyphicon glyphicon-file" aria-hidden="true"></span>
-								</td>
-								<td class="name">
 									<a href="./{{ html .Name }}">
-										{{ .Name }}
+										<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 265 323"><use xlink:href="#file"></use></svg>
+										<span class="name">{{html .Name}}</span>
 									</a>
 								</td>
-								<td class="size">
-									{{ .HumanSize }}
-								</td>
-								<td class="modified">
-									{{ .HumanModTime "01/02/2006 03:04:05 PM" }}
-								</td>
+								<td>{{.HumanSize}}</td>
+								<td class="hideable"><time datetime="{{.HumanModTime "2006-01-02T15:04:05Z"}}">{{.HumanModTime "01/02/2006 03:04:05 PM -07:00"}}</time></td>
+								<td class="hideable"></td>
 							</tr>
-							{{ end }}
-						{{ end }}
+						{{- end}}
+					{{- end}}
 					</tbody>
 				</table>
 			</div>
-		</div>
+		</main>
+		<footer>
+			Served with <a rel="noopener noreferrer" href="https://caddyserver.com">Caddy</a>
+		</footer>
 	</body>
-</html>
-`
+</html>`
