@@ -43,7 +43,7 @@ steps:
     #- mc rm test/s3browser-test/one/two/three/another.txt
 
   - name: compile-and-run
-    image: golang:1.13-alpine
+    image: golang:1.14-alpine
     environment:
       S3_DEBUG: true
       S3_KEY: 51bcaa680ac2fa4bb9f38bde4bf6f5620c542222393f95e2e6f6d38f838e3c17

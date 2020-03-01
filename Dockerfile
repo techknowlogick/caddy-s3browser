@@ -1,7 +1,7 @@
 # build stage
 FROM abiosoft/caddy:builder as abiosoft-builder
 
-FROM golang:1.13-alpine as builder
+FROM golang:1.14-alpine as builder
 
 RUN apk add --no-cache git gcc musl-dev
 
