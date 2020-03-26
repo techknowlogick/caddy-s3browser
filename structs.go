@@ -30,7 +30,7 @@ type Config struct {
 	Secret   string
 	Endpoint string
 	Secure   bool
-	Refresh  string
+	Refresh  time.Duration
 	Debug    bool
 }
 

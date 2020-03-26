@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"strings"
 	"net/http"
+	"strings"
 
 	"github.com/caddyserver/caddy/caddyhttp/httpserver"
 	"github.com/minio/minio-go/v6"

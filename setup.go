@@ -51,16 +51,7 @@ func setup(c *caddy.Controller) error {
 	if err != nil {
 		return err
 	}
-	var duration time.Duration
-	if b.Config.Refresh == "" {
-		b.Config.Refresh = "5m"
-	}
-	duration, err = time.ParseDuration(b.Config.Refresh)
-	if err != nil {
-		fmt.Println("error parsing refresh, falling back to default of 5 minutes")
-		duration = 5 * time.Minute
-	}
-	ticker := time.NewTicker(duration)
+	ticker := time.NewTicker(b.Config.Refresh)
 	go func() {
 		// create more indexes every X minutes based off interval
 		for range ticker.C {
@@ -203,9 +194,11 @@ func getFolder(s []string, i int) string {
 
 func parse(b *Browse, c *caddy.Controller) (err error) {
 	c.RemainingArgs()
-	b.Config = Config{}
-	b.Config.Secure = true
-	b.Config.Debug = false
+	b.Config = Config{
+		Secure:  true,
+		Debug:   false,
+		Refresh: 5 * time.Minute,
+	}
 	for c.NextBlock() {
 		var err error
 		switch c.Val() {
@@ -220,14 +213,14 @@ func parse(b *Browse, c *caddy.Controller) (err error) {
 		case "secure":
 			b.Config.Secure, err = BoolArg(c)
 		case "refresh":
-			b.Config.Refresh, err = StringArg(c)
+			b.Config.Refresh, err = DurationArg(c)
 		case "debug":
 			b.Config.Debug, err = BoolArg(c)
 		default:
 			return c.Errf("Unknown s3browser arg: %s", c.Val())
 		}
 		if err != nil {
-			return err
+			return c.Errf("Error parsing %s: %s", c.Val(), err)
 		}
 	}
 	return nil
@@ -240,6 +233,14 @@ func StringArg(c *caddy.Controller) (string, error) {
 		return "", c.ArgErr()
 	}
 	return args[0], nil
+}
+
+func DurationArg(c *caddy.Controller) (time.Duration, error) {
+	str, err := StringArg(c)
+	if err != nil {
+		return 0 * time.Second, err
+	}
+	return time.ParseDuration(str)
 }
 
 func BoolArg(c *caddy.Controller) (bool, error) {
