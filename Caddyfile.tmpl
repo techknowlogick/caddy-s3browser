@@ -1,14 +1,14 @@
 :80
 
 s3browser {
-	key ${S3_KEY}
-	secret ${S3_SECRET}
-	bucket ${S3_BUCKET}
 	endpoint ${S3_ENDPOINT}
 	region ${S3_REGION}
-	secure ${S3_SECURE}
-	refresh ${S3_REFRESH}
-	debug ${S3_DEBUG}
+	key ${S3_KEY}
+	secret ${S3_SECRET}
+	secure ${S3_SECURE} # true
+	bucket ${S3_BUCKET}
+	refresh ${S3_REFRESH} # 5m
+	debug ${S3_DEBUG} # false
 }
 
 proxy / ${S3_PROTO}://${S3_HOST}${S3_EXTRA} {

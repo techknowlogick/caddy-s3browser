@@ -25,12 +25,12 @@ type File struct {
 }
 
 type Config struct {
-	Key      string
-	Bucket   string
-	Secret   string
 	Endpoint string
 	Region   string
+	Key      string
+	Secret   string
 	Secure   bool
+	Bucket   string
 	Refresh  time.Duration
 	Debug    bool
 }
