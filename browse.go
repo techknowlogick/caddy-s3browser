@@ -1,9 +1,7 @@
 package s3browser
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
@@ -50,40 +48,34 @@ func (b Browse) serveAPI(w http.ResponseWriter, r *http.Request) (int, error) {
 }
 
 func (b Browse) serveDirectory(w http.ResponseWriter, r *http.Request, dir Directory) (int, error) {
-	var buf *bytes.Buffer
-	var err error
+	renderFunc := b.renderHTML
+	contentType := "text/html"
+
 	acceptHeader := strings.ToLower(strings.Join(r.Header["Accept"], ","))
-	switch {
-	case strings.Contains(acceptHeader, "application/json"):
-		if buf, err = b.formatAsJSON(dir); err != nil {
-			return http.StatusInternalServerError, err
-		}
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	default:
-		if buf, err = b.formatAsHTML(dir); err != nil {
-			fmt.Println(err)
-			return http.StatusInternalServerError, err
-		}
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if strings.Contains(acceptHeader, "application/json") {
+		renderFunc = b.renderJSON
+		contentType = "application/json"
 	}
-	buf.WriteTo(w)
+
+	w.Header().Set("Content-Type", contentType+"; charset=utf-8")
+
+	if err := renderFunc(w, dir); err != nil {
+		return http.StatusInternalServerError, err
+	}
 
 	return http.StatusOK, nil
 }
 
-func (b Browse) formatAsJSON(listing Directory) (*bytes.Buffer, error) {
+func (b Browse) renderJSON(w http.ResponseWriter, listing Directory) error {
 	marsh, err := json.Marshal(listing)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	buf := new(bytes.Buffer)
-	_, err = buf.Write(marsh)
-	return buf, err
+	_, err = w.Write(marsh)
+	return err
 }
 
-func (b Browse) formatAsHTML(listing Directory) (*bytes.Buffer, error) {
-	buf := new(bytes.Buffer)
-	err := b.Template.Execute(buf, listing)
-	return buf, err
+func (b Browse) renderHTML(w http.ResponseWriter, listing Directory) error {
+	return b.Template.Execute(w, listing)
 }

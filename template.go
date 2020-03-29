@@ -199,7 +199,7 @@ footer {
 		<header>
 			<h1>
 				{{ range $i, $crumb := .Breadcrumbs }}
-						<a href="/{{ html $crumb.Link }}">
+						<a href="{{ html $crumb.Link }}">
 							{{ html $crumb.ReadableName }}
 						</a>
 						{{if ne $i 0}}/{{end}}

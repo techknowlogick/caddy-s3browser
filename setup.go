@@ -3,14 +3,15 @@ package s3browser
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/caddyserver/caddy"
-	"github.com/caddyserver/caddy/caddyhttp/httpserver"
-	"github.com/minio/minio-go/v6"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/caddyserver/caddy"
+	"github.com/caddyserver/caddy/caddyhttp/httpserver"
+	"github.com/minio/minio-go/v6"
 )
 
 var (
