@@ -90,12 +90,18 @@ func setup(c *caddy.Controller) error {
 }
 
 func getFiles(b *Browse) (map[string]Directory, error) {
+	var err error
 	updating = true
 	fs := make(map[string]Directory)
 	fs["/"] = Directory{
 		Path: "/",
 	}
-	minioClient, err := minio.New(b.Config.Endpoint, b.Config.Key, b.Config.Secret, b.Config.Secure)
+	var minioClient *minio.Client
+	if b.Config.Region == "" {
+		minioClient, err = minio.New(b.Config.Endpoint, b.Config.Key, b.Config.Secret, b.Config.Secure)
+	} else {
+		minioClient, err = minio.NewWithRegion(b.Config.Endpoint, b.Config.Key, b.Config.Secret, b.Config.Secure, b.Config.Region)
+	}
 	if err != nil {
 		return fs, err
 	}

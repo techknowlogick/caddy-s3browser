@@ -29,6 +29,7 @@ type Config struct {
 	Bucket   string
 	Secret   string
 	Endpoint string
+	Region   string
 	Secure   bool
 	Refresh  time.Duration
 	Debug    bool
