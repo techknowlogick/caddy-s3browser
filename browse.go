@@ -16,6 +16,7 @@ type Browse struct {
 	Config   Config
 	Fs       map[string]Directory
 	Template *template.Template
+	Refresh  chan struct{}
 }
 
 func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
@@ -27,6 +28,8 @@ func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
 	switch r.Method {
 	case http.MethodGet, http.MethodHead:
 		// proceed, noop
+	case http.MethodPost:
+		return b.serveAPI(w, r)
 	case "PROPFIND", http.MethodOptions:
 		return http.StatusNotImplemented, nil
 	default:
@@ -38,6 +41,12 @@ func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
 	}
 
 	return b.Next.ServeHTTP(w, r)
+}
+
+func (b Browse) serveAPI(w http.ResponseWriter, r *http.Request) (int, error) {
+	// trigger refresh
+	b.Refresh <- struct{}{}
+	return http.StatusOK, nil
 }
 
 func (b Browse) serveDirectory(w http.ResponseWriter, r *http.Request, dir Directory) (int, error) {

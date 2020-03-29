@@ -57,10 +57,16 @@ func setup(c *caddy.Controller) error {
 	if err != nil {
 		return err
 	}
-	ticker := time.NewTicker(b.Config.Refresh)
+
+	b.Refresh = make(chan struct{})
+
+	// Goroutine to trigger cache refresh (periodic/by request)
 	go func() {
-		// create more indexes every X minutes based off interval
-		for range ticker.C {
+		for {
+			select {
+			case <-b.Refresh: // refresh API call
+			case <-time.After(b.Config.Refresh * time.Second): // refresh after configured time
+			}
 			if !updating {
 				if b.Config.Debug {
 					fmt.Println("Updating Files..")
