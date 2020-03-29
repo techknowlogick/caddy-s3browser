@@ -28,19 +28,25 @@ func init() {
 // setup configures a new S3BROWSER middleware instance.
 func setup(c *caddy.Controller) error {
 	var err error
-	cfg := httpserver.GetConfig(c)
 
 	b := &Browse{}
-	if err = parse(b, c); err != nil {
-		return err
+
+	// Parse config
+	{
+		cfg, err := parseDirective(c)
+		if err != nil {
+			return err
+		}
+		b.Config = cfg
 	}
+
 	if b.Config.Debug {
 		fmt.Println("Config:")
 		fmt.Println(b.Config)
 	}
 	updating = true
 	if b.Config.Debug {
-		fmt.Println("Fetching Files..")
+		fmt.Println("Fetching Files...")
 	}
 	b.Fs, err = getFiles(b)
 	if b.Config.Debug {
@@ -73,6 +79,8 @@ func setup(c *caddy.Controller) error {
 	}
 	b.Template = tpl
 
+	// Add to Caddy
+	cfg := httpserver.GetConfig(c)
 	cfg.AddMiddleware(func(next httpserver.Handler) httpserver.Handler {
 		b.Next = next
 		return b
@@ -192,9 +200,10 @@ func getFolder(s []string, i int) string {
 	return joinFolders(s[0:(i + 1)])
 }
 
-func parse(b *Browse, c *caddy.Controller) (err error) {
-	c.RemainingArgs()
-	b.Config = Config{
+func parseDirective(c *caddy.Controller) (cfg Config, err error) {
+	c.NextArg() // skip block beginning: "s3browser"
+
+	cfg = Config{
 		Secure:  true,
 		Debug:   false,
 		Refresh: 5 * time.Minute,
@@ -203,27 +212,29 @@ func parse(b *Browse, c *caddy.Controller) (err error) {
 		var err error
 		switch c.Val() {
 		case "key":
-			b.Config.Key, err = StringArg(c)
+			cfg.Key, err = StringArg(c)
 		case "secret":
-			b.Config.Secret, err = StringArg(c)
+			cfg.Secret, err = StringArg(c)
 		case "endpoint":
-			b.Config.Endpoint, err = StringArg(c)
+			cfg.Endpoint, err = StringArg(c)
+		case "region":
+			cfg.Region, err = StringArg(c)
 		case "bucket":
-			b.Config.Bucket, err = StringArg(c)
+			cfg.Bucket, err = StringArg(c)
 		case "secure":
-			b.Config.Secure, err = BoolArg(c)
+			cfg.Secure, err = BoolArg(c)
 		case "refresh":
-			b.Config.Refresh, err = DurationArg(c)
+			cfg.Refresh, err = DurationArg(c)
 		case "debug":
-			b.Config.Debug, err = BoolArg(c)
+			cfg.Debug, err = BoolArg(c)
 		default:
-			return c.Errf("Unknown s3browser arg: %s", c.Val())
+			err = c.Errf("Unknown s3browser arg: %s", c.Val())
 		}
 		if err != nil {
-			return c.Errf("Error parsing %s: %s", c.Val(), err)
+			return cfg, c.Errf("Error parsing %s: %s", c.Val(), err)
 		}
 	}
-	return nil
+	return cfg, nil
 }
 
 // Assert only one arg and return it

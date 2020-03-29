@@ -9,26 +9,21 @@ import (
 	"strings"
 
 	"github.com/caddyserver/caddy/caddyhttp/httpserver"
-	"github.com/minio/minio-go/v6"
 )
 
 type Browse struct {
 	Next     httpserver.Handler
 	Config   Config
-	Client   *minio.Client
 	Fs       map[string]Directory
 	Template *template.Template
 }
 
 func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
+	fullPath := r.URL.Path
+	if fullPath == "" {
+		fullPath = "/"
+	}
 
-	path := r.URL.Path
-	if path == "" {
-		path = "/"
-	}
-	if _, ok := b.Fs[path]; !ok {
-		return b.Next.ServeHTTP(w, r)
-	}
 	switch r.Method {
 	case http.MethodGet, http.MethodHead:
 		// proceed, noop
@@ -38,17 +33,25 @@ func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
 		return b.Next.ServeHTTP(w, r)
 	}
 
+	if dir, ok := b.Fs[fullPath]; ok {
+		return b.serveDirectory(w, r, dir)
+	}
+
+	return b.Next.ServeHTTP(w, r)
+}
+
+func (b Browse) serveDirectory(w http.ResponseWriter, r *http.Request, dir Directory) (int, error) {
 	var buf *bytes.Buffer
 	var err error
 	acceptHeader := strings.ToLower(strings.Join(r.Header["Accept"], ","))
 	switch {
 	case strings.Contains(acceptHeader, "application/json"):
-		if buf, err = b.formatAsJSON(b.Fs[path]); err != nil {
+		if buf, err = b.formatAsJSON(dir); err != nil {
 			return http.StatusInternalServerError, err
 		}
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	default:
-		if buf, err = b.formatAsHTML(b.Fs[path]); err != nil {
+		if buf, err = b.formatAsHTML(dir); err != nil {
 			fmt.Println(err)
 			return http.StatusInternalServerError, err
 		}
