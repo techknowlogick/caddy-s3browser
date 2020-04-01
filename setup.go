@@ -27,12 +27,9 @@ func setup(c *caddy.Controller) error {
 	b := &Browse{}
 
 	// Parse config
-	{
-		cfg, err := ParseConfig(c)
-		if err != nil {
-			return err
-		}
-		b.Config = cfg
+	b.Config, err = ParseConfig(c)
+	if err != nil {
+		return err
 	}
 
 	if b.Config.Debug {

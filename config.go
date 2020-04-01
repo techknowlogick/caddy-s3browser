@@ -26,56 +26,55 @@ func ParseConfig(c *caddy.Controller) (cfg Config, err error) {
 		Debug:   false,
 		Refresh: 5 * time.Minute,
 	}
+
 	for c.NextBlock() {
 		var err error
 		switch c.Val() {
 		case "key":
-			cfg.Key, err = StringArg(c)
+			cfg.Key, err = parseStringArg(c)
 		case "secret":
-			cfg.Secret, err = StringArg(c)
+			cfg.Secret, err = parseStringArg(c)
 		case "endpoint":
-			cfg.Endpoint, err = StringArg(c)
+			cfg.Endpoint, err = parseStringArg(c)
 		case "region":
-			cfg.Region, err = StringArg(c)
+			cfg.Region, err = parseStringArg(c)
 		case "bucket":
-			cfg.Bucket, err = StringArg(c)
+			cfg.Bucket, err = parseStringArg(c)
 		case "secure":
-			cfg.Secure, err = BoolArg(c)
+			cfg.Secure, err = parseBoolArg(c)
 		case "refresh":
-			cfg.Refresh, err = DurationArg(c)
+			cfg.Refresh, err = parseDurationArg(c)
 		case "debug":
-			cfg.Debug, err = BoolArg(c)
+			cfg.Debug, err = parseBoolArg(c)
 		default:
-			err = c.Errf("Unknown s3browser arg: %s", c.Val())
+			err = c.Errf("not a valid s3browser option")
 		}
 		if err != nil {
 			return cfg, c.Errf("Error parsing %s: %s", c.Val(), err)
 		}
 	}
+
 	return cfg, nil
 }
 
-// Assert only one arg and return it
-func StringArg(c *caddy.Controller) (string, error) {
-	args := c.RemainingArgs()
-	if len(args) != 1 {
-		return "", c.ArgErr()
+func parseBoolArg(c *caddy.Controller) (bool, error) {
+	if !c.NextArg() {
+		return true, c.ArgErr()
 	}
-	return args[0], nil
+	return strconv.ParseBool(c.Val())
 }
 
-func DurationArg(c *caddy.Controller) (time.Duration, error) {
-	str, err := StringArg(c)
+func parseDurationArg(c *caddy.Controller) (time.Duration, error) {
+	str, err := parseStringArg(c)
 	if err != nil {
 		return 0 * time.Second, err
 	}
 	return time.ParseDuration(str)
 }
 
-func BoolArg(c *caddy.Controller) (bool, error) {
-	args := c.RemainingArgs()
-	if len(args) != 1 {
-		return true, c.ArgErr()
+func parseStringArg(c *caddy.Controller) (string, error) {
+	if !c.NextArg() {
+		return "", c.ArgErr()
 	}
-	return strconv.ParseBool(args[0])
+	return c.Val(), nil
 }
