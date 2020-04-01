@@ -9,10 +9,12 @@ import (
 	"github.com/caddyserver/caddy/caddyhttp/httpserver"
 )
 
+type S3FsCache = map[string]Directory
+
 type Browse struct {
 	Next     httpserver.Handler
 	Config   Config
-	Fs       map[string]Directory
+	Fs       S3FsCache
 	Template *template.Template
 	Refresh  chan struct{}
 }

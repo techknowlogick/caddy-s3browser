@@ -48,7 +48,7 @@ func setup(c *caddy.Controller) error {
 	if b.Config.Debug {
 		fmt.Println("Fetching Files...")
 	}
-	b.Fs, err = getFiles(b)
+	b.Fs, err = buildS3FsCache(b)
 	if b.Config.Debug {
 		fmt.Println("Files...")
 		fmt.Println(b.Fs)
@@ -71,7 +71,7 @@ func setup(c *caddy.Controller) error {
 				if b.Config.Debug {
 					fmt.Println("Updating Files..")
 				}
-				if b.Fs, err = getFiles(b); err != nil {
+				if b.Fs, err = buildS3FsCache(b); err != nil {
 					fmt.Println(err)
 					updating = false
 				}
@@ -98,13 +98,15 @@ func setup(c *caddy.Controller) error {
 	return nil
 }
 
-func getFiles(b *Browse) (map[string]Directory, error) {
+func buildS3FsCache(b *Browse) (S3FsCache, error) {
 	var err error
+
 	updating = true
-	fs := make(map[string]Directory)
-	fs["/"] = Directory{
-		Path: "/",
-	}
+	defer (func() { updating = false })()
+
+	fs := make(S3FsCache)
+	fs["/"] = Directory{Path: "/"}
+
 	var minioClient *minio.Client
 	if b.Config.Region == "" {
 		minioClient, err = minio.New(b.Config.Endpoint, b.Config.Key, b.Config.Secret, b.Config.Secure)
@@ -122,97 +124,72 @@ func getFiles(b *Browse) (map[string]Directory, error) {
 		minioClient.SetCustomTransport(tr)
 	}
 
-	doneCh := make(chan struct{})
-	defer close(doneCh)
-	objectCh := minioClient.ListObjects(b.Config.Bucket, "", true, doneCh)
+	objectCh := minioClient.ListObjectsV2(
+		b.Config.Bucket,
+		"",   // prefix
+		true, // recursive
+		nil,  // doneChan
+	)
 
 	for obj := range objectCh {
 		if obj.Err != nil {
 			continue
 		}
 
-		dir, file := path.Split(obj.Key)
-		if len(dir) > 0 && dir[:0] != "/" {
-			dir = "/" + dir
-		}
-		if dir == "" {
-			dir = "/" // if dir is empty, then set to root
-		}
-		// Note: dir should start & end with / now
+		objDir, objName := path.Split(obj.Key)
 
-		if len(getFolders(dir)) < 3 {
-			// files are in root
-			// less than three bc "/" split becomes ["",""]
-			// Do nothing as file will get added below & root already exists
-		} else {
-			// TODO: loop through folders and ensure they are in the tree
-			// make sure to add folder to parent as well
-			foldersLen := len(getFolders(dir))
-			for i := 2; i < foldersLen; i++ {
-				parent := getParent(getFolders(dir), i)
-				folder := getFolder(getFolders(dir), i)
+		// Ensure objDir starts with / but doesn't end with one
+		objDir = "/" + strings.Trim(objDir, "/")
+
+		// Add missing parent directories in `fs`
+		if _, ok := fs[objDir]; !ok {
+			dirs := strings.Split(strings.Trim(objDir, "/"), "/")
+
+			parentPath := "/"
+			for _, curr := range dirs {
 				if b.Config.Debug {
-					fmt.Printf("folders: %q i: %d parent: %s folder: %s\n", getFolders(dir), i, parent, folder)
+					fmt.Printf("dirs: %q parentPath: %s curr: %s\n", dirs, parentPath, curr)
 				}
 
-				// check if parent exists
-				if _, ok := fs[parent]; !ok {
-					// create parent
-					fs[parent] = Directory{
-						Path:    parent,
-						Folders: []Folder{Folder{Name: getFolder(getFolders(dir), i)}},
+				currPath := path.Join(parentPath, curr)
+				if _, ok := fs[currPath]; !ok {
+					if b.Config.Debug {
+						fmt.Printf("+  dir: %s\n", currPath)
 					}
+
+					// Add to parent Node
+					parentNode := fs[parentPath]
+					parentNode.Folders = append(parentNode.Folders, Folder{Name: curr})
+					fs[parentPath] = parentNode
+
+					// Add own Node
+					fs[currPath] = Directory{Path: currPath}
 				}
-				// check if folder itself exists
-				if _, ok := fs[folder]; !ok {
-					// create parent
-					fs[folder] = Directory{
-						Path: folder,
-					}
-					tmp := fs[parent]
-					tmp.Folders = append(fs[parent].Folders, Folder{Name: getFolder(getFolders(dir), i)})
-					fs[parent] = tmp
+
+				if parentPath != "/" {
+					parentPath += "/"
 				}
+				parentPath += curr
 			}
 		}
 
-		// STEP Two
-		// add file to directory
-		tempFile := File{Name: file, Bytes: obj.Size, Date: obj.LastModified, Folder: joinFolders(getFolders(dir))}
-		fsCopy := fs[joinFolders(getFolders(dir))]
-		fsCopy.Path = joinFolders(getFolders(dir))
-		fsCopy.Files = append(fsCopy.Files, tempFile) // adding file list of files
-		fs[joinFolders(getFolders(dir))] = fsCopy
-	} // end looping through all the files
-	updating = false
+		// Add the object
+		if objName != "" { // "": obj is the directory itself
+			if b.Config.Debug {
+				fmt.Printf("+ file: %s/%s\n", objDir, objName)
+			}
+
+			fsCopy := fs[objDir]
+			fsCopy.Files = append(fsCopy.Files, File{
+				Name:  objName,
+				Bytes: obj.Size,
+				Date:  obj.LastModified,
+			})
+			fs[objDir] = fsCopy
+		}
+	}
+
 	return fs, nil
-}
-
-func getFolders(s string) []string {
-	// first and last entry should be empty
-	return strings.Split(s, "/")
-}
-
-func joinFolders(s []string) string {
-	return strings.Join(s, "/")
-}
-
-func getParent(s []string, i int) string {
-	// trim one from end
-	if i < 3 {
-		return "/"
-	}
-	s[i-1] = ""
-	return joinFolders(s[0:(i)])
-}
-
-func getFolder(s []string, i int) string {
-	if i < 3 {
-		s[2] = ""
-		return joinFolders(s[0:3])
-	}
-	s[i] = ""
-	return joinFolders(s[0:(i + 1)])
 }
 
 func parseDirective(c *caddy.Controller) (cfg Config, err error) {

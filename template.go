@@ -9,7 +9,7 @@ func parseTemplate() (*template.Template, error) {
 const defaultTemplate = `<!DOCTYPE html>
 <html>
 	<head>
-		<title>{{ .ReadableName }} | S3 Browser</title>
+		<title>{{ .Name }} | S3 Browser</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
@@ -199,10 +199,10 @@ footer {
 		<header>
 			<h1>
 				{{ range $i, $crumb := .Breadcrumbs }}
-						<a href="{{ html $crumb.Link }}">
-							{{ html $crumb.ReadableName }}
-						</a>
-						{{if ne $i 0}}/{{end}}
+					<a href="{{ html $crumb.Link }}">
+						{{ html $crumb.Name }}
+					</a>
+					/
 				{{ end }}
 			</h1>
 		</header>
@@ -242,9 +242,9 @@ footer {
 						<tr class="file">
 							<td></td>
 							<td>
-								<a href="{{ html .Name }}">
+								<a href="{{ html (.Url $) }}">
 									<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 317 259"><use xlink:href="#folder"></use></svg>
-									<span class="name">{{ .ReadableName }}</span>
+									<span class="name">{{ html .Name }}</span>
 								</a>
 							</td>
 							<td>&mdash;</td>
@@ -253,20 +253,18 @@ footer {
 						</tr>
 					{{ end }}
 					{{ range .Files }}
-						{{ if ne .Name ""}}
-							<tr class="file">
-								<td></td>
-								<td>
-									<a href="./{{ html .Name }}">
-										<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 265 323"><use xlink:href="#file"></use></svg>
-										<span class="name">{{html .Name}}</span>
-									</a>
-								</td>
-								<td>{{.HumanSize}}</td>
-								<td class="hideable"><time datetime="{{.HumanModTime "2006-01-02T15:04:05Z"}}">{{.HumanModTime "01/02/2006 03:04:05 PM -07:00"}}</time></td>
-								<td class="hideable"></td>
-							</tr>
-						{{- end}}
+						<tr class="file">
+							<td></td>
+							<td>
+								<a href="{{ html (.Url $) }}">
+									<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 265 323"><use xlink:href="#file"></use></svg>
+									<span class="name">{{html .Name}}</span>
+								</a>
+							</td>
+							<td>{{ .HumanSize }}</td>
+							<td class="hideable"><time datetime="{{ .HumanModTime "2006-01-02T15:04:05Z" }}">{{ .HumanModTime "01/02/2006 03:04:05 PM -07:00" }}</time></td>
+							<td class="hideable"></td>
+						</tr>
 					{{- end}}
 					</tbody>
 				</table>

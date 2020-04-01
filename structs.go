@@ -1,7 +1,7 @@
 package s3browser
 
 import (
-	"path/filepath"
+	"path"
 	"strings"
 	"time"
 
@@ -19,10 +19,9 @@ type Folder struct {
 }
 
 type File struct {
-	Folder string
-	Bytes  int64
-	Name   string
-	Date   time.Time
+	Name  string
+	Bytes int64
+	Date  time.Time
 }
 
 type Config struct {
@@ -37,8 +36,8 @@ type Config struct {
 }
 
 type Node struct {
-	Link         string
-	ReadableName string
+	Link string
+	Name string
 }
 
 // HumanSize returns the size of the file as a human-readable string
@@ -52,32 +51,31 @@ func (f File) HumanModTime(format string) string {
 	return f.Date.Format(format)
 }
 
-func (d Directory) ReadableName() string {
-	return cleanPath(d.Path)
+func (f File) Url(parent Directory) string {
+	return path.Join(parent.Path, f.Name)
 }
 
-func (f Folder) ReadableName() string {
-	return cleanPath(f.Name)
+func (d Directory) Name() string {
+	return path.Base(d.Path)
 }
 
-func cleanPath(s string) string {
-	return filepath.Base(filepath.Dir(s))
+func (f Folder) Url(parent Directory) string {
+	return path.Join(parent.Path, f.Name)
 }
 
 func (d Directory) Breadcrumbs() []Node {
-	link := "/"
-
-	nodes := []Node{
-		Node{Link: link, ReadableName: "/"},
+	nodes := []Node{ // TODO: remove need for Node
+		Node{Link: "/", Name: "Home"}, // TODO: Home icon
 	}
 
-	for _, folder := range strings.Split(d.Path, "/") {
-		if len(folder) == 0 {
-			continue
-		}
+	if d.Path == "/" {
+		return nodes
+	}
 
-		link += folder + "/"
-		nodes = append(nodes, Node{Link: link, ReadableName: folder})
+	currPath := ""
+	for _, currName := range strings.Split(strings.Trim(d.Path, "/"), "/") {
+		currPath += "/" + currName
+		nodes = append(nodes, Node{Link: currPath, Name: currName})
 	}
 
 	return nodes
