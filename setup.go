@@ -70,11 +70,17 @@ func setup(c *caddy.Controller) error {
 
 	// Prepare template
 	{
-		tpl, err := parseTemplate()
+		b.Template, err = parseTemplate()
 		if err != nil {
 			return err
 		}
-		b.Template = tpl
+
+		// Try to render now to catch any error in template
+		dir, _ := b.S3Cache.GetDir("/")
+		err = b.renderHTML(ioutil.Discard, dir)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Add to Caddy

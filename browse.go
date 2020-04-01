@@ -3,6 +3,7 @@ package s3browser
 import (
 	"encoding/json"
 	"html/template"
+	"io"
 	"net/http"
 	"strings"
 
@@ -66,13 +67,13 @@ func (b Browse) serveDirectory(w http.ResponseWriter, r *http.Request, dir Direc
 	return http.StatusOK, nil
 }
 
-func (b Browse) renderJSON(w http.ResponseWriter, listing Directory) error {
+func (b Browse) renderJSON(w io.Writer, dir Directory) error {
 	var data []byte
 	var err error
 	if !b.Config.Debug {
-		data, err = json.Marshal(listing)
+		data, err = json.Marshal(dir)
 	} else {
-		data, err = json.MarshalIndent(listing, "", "  ")
+		data, err = json.MarshalIndent(dir, "", "  ")
 	}
 	if err != nil {
 		return err
@@ -82,6 +83,6 @@ func (b Browse) renderJSON(w http.ResponseWriter, listing Directory) error {
 	return err
 }
 
-func (b Browse) renderHTML(w http.ResponseWriter, listing Directory) error {
-	return b.Template.Execute(w, listing)
+func (b Browse) renderHTML(w io.Writer, dir Directory) error {
+	return b.Template.Execute(w, dir)
 }
