@@ -12,7 +12,7 @@ import (
 type Browse struct {
 	Next     httpserver.Handler
 	Config   Config
-	Fs       S3FsCache
+	S3Cache  S3FsCache
 	Template *template.Template
 	Refresh  chan struct{}
 }
@@ -34,7 +34,7 @@ func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
 		return b.Next.ServeHTTP(w, r)
 	}
 
-	if dir, ok := b.Fs[fullPath]; ok {
+	if dir, ok := b.S3Cache.GetDir(fullPath); ok {
 		return b.serveDirectory(w, r, dir)
 	}
 
