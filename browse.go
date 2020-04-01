@@ -69,12 +69,18 @@ func (b Browse) serveDirectory(w http.ResponseWriter, r *http.Request, dir Direc
 }
 
 func (b Browse) renderJSON(w http.ResponseWriter, listing Directory) error {
-	marsh, err := json.Marshal(listing)
+	var data []byte
+	var err error
+	if !b.Config.Debug {
+		data, err = json.Marshal(listing)
+	} else {
+		data, err = json.MarshalIndent(listing, "", "  ")
+	}
 	if err != nil {
 		return err
 	}
 
-	_, err = w.Write(marsh)
+	_, err = w.Write(data)
 	return err
 }
 
