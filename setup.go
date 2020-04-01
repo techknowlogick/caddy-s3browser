@@ -14,10 +14,6 @@ import (
 	"github.com/minio/minio-go/v6"
 )
 
-var (
-	updating bool
-)
-
 func init() {
 	caddy.RegisterPlugin("s3browser", caddy.Plugin{
 		ServerType: "http",
@@ -44,7 +40,6 @@ func setup(c *caddy.Controller) error {
 		fmt.Println("Config:")
 		fmt.Println(b.Config)
 	}
-	updating = true
 	if b.Config.Debug {
 		fmt.Println("Fetching Files...")
 	}
@@ -53,7 +48,6 @@ func setup(c *caddy.Controller) error {
 		fmt.Println("Files...")
 		fmt.Println(b.Fs)
 	}
-	updating = false
 	if err != nil {
 		return err
 	}
@@ -67,14 +61,11 @@ func setup(c *caddy.Controller) error {
 			case <-b.Refresh: // refresh API call
 			case <-time.After(b.Config.Refresh * time.Second): // refresh after configured time
 			}
-			if !updating {
-				if b.Config.Debug {
-					fmt.Println("Updating Files..")
-				}
-				if b.Fs, err = buildS3FsCache(b); err != nil {
-					fmt.Println(err)
-					updating = false
-				}
+			if b.Config.Debug {
+				fmt.Println("Updating Files..")
+			}
+			if b.Fs, err = buildS3FsCache(b); err != nil {
+				fmt.Println(err)
 			}
 		}
 	}()
@@ -100,9 +91,6 @@ func setup(c *caddy.Controller) error {
 
 func buildS3FsCache(b *Browse) (S3FsCache, error) {
 	var err error
-
-	updating = true
-	defer (func() { updating = false })()
 
 	fs := make(S3FsCache)
 	fs["/"] = Directory{Path: "/"}
