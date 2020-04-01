@@ -8,6 +8,8 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
+type S3FsCache = map[string]Directory
+
 type Directory struct {
 	Path    string
 	Folders []Folder
@@ -22,17 +24,6 @@ type File struct {
 	Name  string
 	Bytes int64
 	Date  time.Time
-}
-
-type Config struct {
-	Endpoint string
-	Region   string
-	Key      string
-	Secret   string
-	Secure   bool
-	Bucket   string
-	Refresh  time.Duration
-	Debug    bool
 }
 
 type Node struct {
@@ -55,17 +46,17 @@ func (f File) Url(parent Directory) string {
 	return path.Join(parent.Path, f.Name)
 }
 
-func (d Directory) Name() string {
-	return path.Base(d.Path)
-}
-
 func (f Folder) Url(parent Directory) string {
 	return path.Join(parent.Path, f.Name)
 }
 
+func (d Directory) Name() string {
+	return path.Base(d.Path)
+}
+
 func (d Directory) Breadcrumbs() []Node {
-	nodes := []Node{ // TODO: remove need for Node
-		Node{Link: "/", Name: "Home"}, // TODO: Home icon
+	nodes := []Node{
+		Node{Link: "/", Name: "Home"},
 	}
 
 	if d.Path == "/" {

@@ -9,8 +9,6 @@ import (
 	"github.com/caddyserver/caddy/caddyhttp/httpserver"
 )
 
-type S3FsCache = map[string]Directory
-
 type Browse struct {
 	Next     httpserver.Handler
 	Config   Config
