@@ -2,6 +2,9 @@ package s3browser
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
 	"time"
 
 	"github.com/caddyserver/caddy"
@@ -27,25 +30,27 @@ func setup(c *caddy.Controller) error {
 		return err
 	}
 
-	if b.Config.Debug {
-		fmt.Println("Config:")
-		fmt.Println(b.Config)
+	// Initialize logger
+	var l *log.Logger
+	{
+		output := ioutil.Discard
+		if b.Config.Debug {
+			output = os.Stdout
+		}
+		prefix := fmt.Sprintf("[s3browser][%s] ", b.Config.Bucket)
+		l = log.New(output, prefix, log.LstdFlags)
 	}
 
+	l.Printf("Config:\n\t%#v\n", b.Config)
+
 	{
-		if b.Config.Debug {
-			fmt.Println("Initialising S3 Cache...")
-		}
-		b.S3Cache, err = NewS3Cache(b.Config)
+		l.Println("Initializing S3 Cache")
+		b.S3Cache, err = NewS3Cache(b.Config, l)
 		if err == nil {
 			err = b.S3Cache.Refresh()
 		}
 		if err != nil {
 			return err
-		}
-		if b.Config.Debug {
-			fmt.Println("S3 Cache:")
-			fmt.Println(b.S3Cache)
 		}
 	}
 
@@ -58,18 +63,16 @@ func setup(c *caddy.Controller) error {
 			case <-b.Refresh: // refresh API call
 			case <-time.After(b.Config.Refresh * time.Second): // refresh after configured time
 			}
-			if b.Config.Debug {
-				fmt.Println("Updating Files...")
-			}
 			err := b.S3Cache.Refresh()
 			if err != nil {
-				fmt.Println(err)
+				l.Println(err)
 			}
 		}
 	}()
 
 	// Prepare template
 	{
+		l.Println("Parsing template")
 		b.Template, err = parseTemplate()
 		if err != nil {
 			return err
@@ -86,6 +89,7 @@ func setup(c *caddy.Controller) error {
 	// Add to Caddy
 	cfg := httpserver.GetConfig(c)
 	cfg.AddMiddleware(func(next httpserver.Handler) httpserver.Handler {
+		l.Println("Initialization complete")
 		b.Next = next
 		return b
 	})

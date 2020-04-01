@@ -2,7 +2,7 @@ package s3browser
 
 import (
 	"crypto/tls"
-	"fmt"
+	"log"
 	"net/http"
 	"path"
 	"strings"
@@ -14,6 +14,7 @@ import (
 
 type S3FsCache struct {
 	s3     *minio.Client
+	logger *log.Logger
 	bucket string
 	data   map[string]Directory
 }
@@ -80,8 +81,9 @@ func (d Directory) Breadcrumbs() []Node {
 	return nodes
 }
 
-func NewS3Cache(cfg Config) (fs S3FsCache, err error) {
+func NewS3Cache(cfg Config, l *log.Logger) (fs S3FsCache, err error) {
 	fs.bucket = cfg.Bucket
+	fs.logger = l
 
 	if cfg.Region == "" {
 		fs.s3, err = minio.New(cfg.Endpoint, cfg.Key, cfg.Secret, cfg.Secure)
@@ -122,6 +124,8 @@ func (fs *S3FsCache) GetFile(filePath string) (File, bool) {
 }
 
 func (fs *S3FsCache) Refresh() (err error) {
+	fs.logger.Println("Refreshing S3 cache")
+
 	newData := map[string]Directory{
 		"/": Directory{Path: "/"},
 	}
@@ -133,11 +137,9 @@ func (fs *S3FsCache) Refresh() (err error) {
 		nil,  // doneChan
 	)
 
-	fmt.Println("Refreshing")
-
 	for obj := range objectCh {
 		if obj.Err != nil {
-			fmt.Printf("Err: %s", obj.Err)
+			fs.logger.Printf("Err: %s", obj.Err)
 			continue
 		}
 
@@ -146,19 +148,14 @@ func (fs *S3FsCache) Refresh() (err error) {
 
 		// Add missing parent directories in `newData`
 		if _, ok := newData[objDir]; !ok {
-			dirs := strings.Split(strings.Trim(objDir, "/"), "/")
+			// Split objDir into its path components
+			dirs := strings.Split(objDir[1:], "/") // [1:]: skip leading /
 
 			parentPath := "/"
 			for _, curr := range dirs {
-				// if b.Config.Debug {
-				// 	fmt.Printf("dirs: %q parentPath: %s curr: %s\n", dirs, parentPath, curr)
-				// }
-
 				currPath := path.Join(parentPath, curr)
 				if _, ok := newData[currPath]; !ok {
-					// if b.Config.Debug {
-						fmt.Printf("+  dir: %s\n", currPath)
-					// }
+					fs.logger.Printf("+  dir: %s\n", currPath)
 
 					// Add to parent Node
 					parentNode := newData[parentPath]
@@ -178,9 +175,7 @@ func (fs *S3FsCache) Refresh() (err error) {
 
 		// Add the object
 		if objName != "" { // "": obj is the directory itself
-			// if b.Config.Debug {
-				fmt.Printf("+ file: %s/%s\n", objDir, objName)
-			// }
+			fs.logger.Printf("+ file: %s/%s\n", objDir, objName)
 
 			fsCopy := newData[objDir]
 			fsCopy.Files = append(fsCopy.Files, File{
@@ -193,6 +188,8 @@ func (fs *S3FsCache) Refresh() (err error) {
 	}
 
 	fs.data = newData
+
+	fs.logger.Println("S3 cache updated")
 	return nil
 }
 
