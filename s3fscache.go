@@ -128,8 +128,9 @@ func (fs *S3FsCache) Refresh() (err error) {
 }
 
 // Ensure path starts with / and doesn't end with one
-func normalizePath(path string) string {
-	return "/" + strings.Trim(path, "/")
+func normalizePath(p string) string {
+	return "/" + strings.Trim(path.Clean(p), "/")
+}
 
 // Add directory
 // `dirPath` must be normalized
