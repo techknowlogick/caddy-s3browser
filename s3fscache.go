@@ -21,23 +21,13 @@ type S3FsCache struct {
 
 type Directory struct {
 	Path    string
-	Folders []Folder
-	Files   []File
-}
-
-type Folder struct {
-	Name string
+	Folders []string
+	Files   map[string]File
 }
 
 type File struct {
-	Name  string
 	Bytes int64
 	Date  time.Time
-}
-
-type Node struct {
-	Link string
-	Name string
 }
 
 // HumanSize returns the size of the file as a human-readable string
@@ -49,36 +39,6 @@ func (f File) HumanSize() string {
 // HumanModTime returns the modified time of the file as a human-readable string.
 func (f File) HumanModTime(format string) string {
 	return f.Date.Format(format)
-}
-
-func (f File) Url(parent Directory) string {
-	return path.Join(parent.Path, f.Name)
-}
-
-func (f Folder) Url(parent Directory) string {
-	return path.Join(parent.Path, f.Name)
-}
-
-func (d Directory) Name() string {
-	return path.Base(d.Path)
-}
-
-func (d Directory) Breadcrumbs() []Node {
-	nodes := []Node{
-		Node{Link: "/", Name: "Home"},
-	}
-
-	if d.Path == "/" {
-		return nodes
-	}
-
-	currPath := ""
-	for _, currName := range strings.Split(strings.Trim(d.Path, "/"), "/") {
-		currPath += "/" + currName
-		nodes = append(nodes, Node{Link: currPath, Name: currName})
-	}
-
-	return nodes
 }
 
 func NewS3Cache(cfg Config, l *log.Logger) (fs S3FsCache, err error) {
@@ -112,23 +72,20 @@ func (fs *S3FsCache) GetFile(filePath string) (File, bool) {
 	dirPath, fileName := path.Split(filePath)
 	dirPath = normalizePath(dirPath)
 
-	if dir, ok := fs.data[dirPath]; ok {
-		for _, file := range dir.Files {
-			if file.Name == fileName {
-				return file, true
-			}
-		}
+	dir, ok := fs.GetDir(dirPath)
+	if !ok {
+		return File{}, false
 	}
 
-	return File{}, false
+	file, ok := dir.Files[fileName]
+	return file, ok
 }
 
 func (fs *S3FsCache) Refresh() (err error) {
 	fs.logger.Println("Refreshing S3 cache")
 
-	newData := map[string]Directory{
-		"/": Directory{Path: "/"},
-	}
+	newData := map[string]Directory{}
+	addDirectory(fs.logger, newData, "/")
 
 	objectCh := fs.s3.ListObjectsV2(
 		fs.bucket,
@@ -146,31 +103,9 @@ func (fs *S3FsCache) Refresh() (err error) {
 		objDir, objName := path.Split(obj.Key)
 		objDir = normalizePath(objDir)
 
-		// Add missing parent directories in `newData`
+		// Add any missing parent directories in `newData`
 		if _, ok := newData[objDir]; !ok {
-			// Split objDir into its path components
-			dirs := strings.Split(objDir[1:], "/") // [1:]: skip leading /
-
-			parentPath := "/"
-			for _, curr := range dirs {
-				currPath := path.Join(parentPath, curr)
-				if _, ok := newData[currPath]; !ok {
-					fs.logger.Printf("+  dir: %s\n", currPath)
-
-					// Add to parent Node
-					parentNode := newData[parentPath]
-					parentNode.Folders = append(parentNode.Folders, Folder{Name: curr})
-					newData[parentPath] = parentNode
-
-					// Add own Node
-					newData[currPath] = Directory{Path: currPath}
-				}
-
-				if parentPath != "/" {
-					parentPath += "/"
-				}
-				parentPath += curr
-			}
+			addDirectory(fs.logger, newData, objDir)
 		}
 
 		// Add the object
@@ -178,11 +113,10 @@ func (fs *S3FsCache) Refresh() (err error) {
 			fs.logger.Printf("+ file: %s/%s\n", objDir, objName)
 
 			fsCopy := newData[objDir]
-			fsCopy.Files = append(fsCopy.Files, File{
-				Name:  objName,
+			fsCopy.Files[objName] = File{
 				Bytes: obj.Size,
 				Date:  obj.LastModified,
-			})
+			}
 			newData[objDir] = fsCopy
 		}
 	}
@@ -196,4 +130,35 @@ func (fs *S3FsCache) Refresh() (err error) {
 // Ensure path starts with / and doesn't end with one
 func normalizePath(path string) string {
 	return "/" + strings.Trim(path, "/")
+
+// Add directory
+// `dirPath` must be normalized
+func addDirectory(logger *log.Logger, outData map[string]Directory, dirPath string) {
+	// Split dirPath into its path components
+	dirs := strings.Split(dirPath[1:], "/") // [1:]: skip leading /
+
+	parentPath := "/"
+	for _, curr := range dirs {
+		currPath := path.Join(parentPath, curr)
+		if _, ok := outData[currPath]; !ok {
+			logger.Printf("+  dir: %s\n", currPath)
+
+			// Add to parent Node
+			parentNode := outData[parentPath]
+			parentNode.Folders = append(parentNode.Folders, curr)
+			outData[parentPath] = parentNode
+
+			// Add own Node
+			outData[currPath] = Directory{
+				Path:    currPath,
+				Folders: []string{},
+				Files:   map[string]File{},
+			}
+		}
+
+		if parentPath != "/" {
+			parentPath += "/"
+		}
+		parentPath += curr
+	}
 }

@@ -1,15 +1,48 @@
 package s3browser
 
-import "html/template"
+import (
+	"html/template"
+	"path"
+	"strings"
+)
+
+type Crumb struct {
+	Link string
+	Name string
+}
 
 func parseTemplate() (*template.Template, error) {
-	return template.New("listing").Parse(defaultTemplate)
+	funcs := template.FuncMap{
+		"Breadcrumbs": breadcrumbs,
+		"PathBase":    path.Base,
+		"PathDir":     path.Dir,
+		"PathJoin":    path.Join,
+	}
+	return template.New("listing").Funcs(funcs).Parse(defaultTemplate)
+}
+
+func breadcrumbs(d Directory) []Crumb {
+	crumbs := []Crumb{
+		Crumb{Link: "/", Name: "Home"},
+	}
+
+	if d.Path == "/" {
+		return crumbs
+	}
+
+	currPath := ""
+	for _, currName := range strings.Split(strings.Trim(d.Path, "/"), "/") {
+		currPath += "/" + currName
+		crumbs = append(crumbs, Crumb{Link: currPath, Name: currName})
+	}
+
+	return crumbs
 }
 
 const defaultTemplate = `<!DOCTYPE html>
 <html>
 	<head>
-		<title>{{ .Name }} | S3 Browser</title>
+		<title>{{ PathBase .Path }} | S3 Browser</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
@@ -198,7 +231,7 @@ footer {
 		</svg>
 		<header>
 			<h1>
-				{{ range $i, $crumb := .Breadcrumbs }}
+				{{ range $_, $crumb := Breadcrumbs $ }}
 					<a href="{{ html $crumb.Link }}">
 						{{ html $crumb.Name }}
 					</a>
@@ -229,7 +262,7 @@ footer {
 					<tr>
 						<td></td>
 						<td>
-							<a href="..">
+							<a href="{{ html (PathDir .Path) }}">
 								<span class="goup">Go up</span>
 							</a>
 						</td>
@@ -238,13 +271,13 @@ footer {
 						<td class="hideable"></td>
 					</tr>
 					{{- end}}
-					{{ range .Folders }}
+					{{ range $name := .Folders }}
 						<tr class="file">
 							<td></td>
 							<td>
-								<a href="{{ html (.Url $) }}">
+								<a href="{{ html (PathJoin $.Path $name) }}">
 									<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 317 259"><use xlink:href="#folder"></use></svg>
-									<span class="name">{{ html .Name }}</span>
+									<span class="name">{{ html $name }}</span>
 								</a>
 							</td>
 							<td>&mdash;</td>
@@ -252,17 +285,17 @@ footer {
 							<td class="hideable"></td>
 						</tr>
 					{{ end }}
-					{{ range .Files }}
+					{{ range $name, $info := .Files }}
 						<tr class="file">
 							<td></td>
 							<td>
-								<a href="{{ html (.Url $) }}">
+								<a href="{{ html (PathJoin $.Path $name) }}">
 									<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 265 323"><use xlink:href="#file"></use></svg>
-									<span class="name">{{html .Name}}</span>
+									<span class="name">{{html $name}}</span>
 								</a>
 							</td>
-							<td>{{ .HumanSize }}</td>
-							<td class="hideable"><time datetime="{{ .HumanModTime "2006-01-02T15:04:05Z" }}">{{ .HumanModTime "01/02/2006 03:04:05 PM -07:00" }}</time></td>
+							<td>{{ $info.HumanSize }}</td>
+							<td class="hideable"><time datetime="{{ $info.HumanModTime "2006-01-02T15:04:05Z" }}">{{ $info.HumanModTime "01/02/2006 03:04:05 PM -07:00" }}</time></td>
 							<td class="hideable"></td>
 						</tr>
 					{{- end}}
