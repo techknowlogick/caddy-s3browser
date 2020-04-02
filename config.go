@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+	SiteName string
 	Endpoint string
 	Region   string
 	Key      string
@@ -22,14 +23,17 @@ func ParseConfig(c *caddy.Controller) (cfg Config, err error) {
 	c.NextArg() // skip block beginning: "s3browser"
 
 	cfg = Config{
-		Secure:  true,
-		Debug:   false,
-		Refresh: 5 * time.Minute,
+		SiteName: "S3 Browser",
+		Secure:   true,
+		Debug:    false,
+		Refresh:  5 * time.Minute,
 	}
 
 	for c.NextBlock() {
 		var err error
 		switch c.Val() {
+		case "site_name":
+			cfg.SiteName, err = parseStringArg(c)
 		case "key":
 			cfg.Key, err = parseStringArg(c)
 		case "secret":

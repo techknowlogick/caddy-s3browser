@@ -8,17 +8,18 @@ Note: For performance reasons, the file listing is fetched once every 5 minutes 
 
 See `Caddyfile.tmpl` for a template.
 
-|  option  |  type  | default | help |
-|----------|:------:|---------|------|
-| endpoint | string |         | S3 hostname |
-| region   | string |  empty  | S3 region (optional) |
-| key      | string |         | S3 access key |
-| secret   | string |         | S3 secret key |
-| secure   |  bool  | `true`  | Use TLS when connection to S3 |
-| bucket   | string |         | S3 bucket |
-| refresh  | string | `5m`    | Time between periodic refresh |
-| api      |  bool  | `true`  | Enable the API |
-| debug    |  bool  | `false` | Output debug information |
+|  option   |  type  |  default   | help |
+|-----------|:------:|------------|------|
+| site_name | string | S3 Browser | Site display name |
+| endpoint  | string |            | S3 hostname |
+| region    | string |   empty    | S3 region (optional) |
+| key       | string |            | S3 access key |
+| secret    | string |            | S3 secret key |
+| secure    |  bool  |   `true`   | Use TLS when connection to S3 |
+| bucket    | string |            | S3 bucket |
+| refresh   | string |    `5m`    | Time between periodic refresh |
+| debug     |  bool  |   `false`  | Output debug information |
+
 
 ## Downloading Files
 
