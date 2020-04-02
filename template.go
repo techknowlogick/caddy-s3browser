@@ -239,10 +239,7 @@ footer {
 		<header>
 			<h1>
 				{{ range $_, $crumb := Breadcrumbs $ }}
-					<a href="{{ html $crumb.Link }}">
-						{{ html $crumb.Name }}
-					</a>
-					/
+					<a href="{{ html $crumb.Link }}">{{ html $crumb.Name }}</a> /
 				{{ end }}
 			</h1>
 		</header>
