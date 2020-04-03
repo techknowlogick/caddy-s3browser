@@ -1,18 +1,23 @@
 # build stage
-FROM abiosoft/caddy:builder as abiosoft-builder
-
 FROM golang:1.14-alpine as builder
 
 RUN apk add --no-cache git gcc musl-dev
 
-COPY --from=abiosoft-builder /usr/bin/builder.sh /usr/bin/builder.sh
-
-CMD ["/bin/sh", "/usr/bin/builder.sh"]
-
 # process wrapper
 RUN go get -v github.com/abiosoft/parent
 
-RUN VERSION="1.0.4" PLUGINS="s3browser" ENABLE_TELEMETRY=false /bin/sh /usr/bin/builder.sh
+COPY . /tmp/caddy-s3browser
+
+RUN mkdir -p /go/src/github.com/caddyserver/ && \
+    git clone --branch v1.0.5 https://github.com/caddyserver/caddy.git /go/src/github.com/caddyserver/caddy && \
+    cd /go/src/github.com/caddyserver/caddy/caddy && \
+    sed -i '/This is where other plugins get plugged in (imported)/a _ "github.com/techknowlogick/caddy-s3browser"' caddymain/run.go && \
+    go mod edit -replace github.com/techknowlogick/caddy-s3browser=/tmp/caddy-s3browser && \
+    go install -v . && \
+    /go/bin/caddy -version && \
+    mkdir -p /install && \
+    cp /go/bin/caddy /install/caddy
+# last copy command is for backwards compatibility
 
 FROM alpine:3.11
 EXPOSE 80
