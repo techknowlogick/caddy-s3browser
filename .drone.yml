@@ -58,9 +58,9 @@ steps:
       GO111MODULE: on
     commands:
     - apk add wget mailcap ca-certificates gettext libintl curl git
-    - mkdir -p /go/src/github.com/mholt/
-    - git clone https://github.com/mholt/caddy.git /go/src/github.com/mholt/caddy
-    - cd /go/src/github.com/mholt/caddy/caddy
+    - mkdir -p /go/src/github.com/caddyserver/
+    - git clone https://github.com/caddyserver/caddy.git /go/src/github.com/caddyserver/caddy
+    - cd /go/src/github.com/caddyserver/caddy/caddy
     - sed -i '/This is where other plugins get plugged in (imported)/a _ "github.com/techknowlogick/caddy-s3browser"' caddymain/run.go
     - go get github.com/techknowlogick/caddy-s3browser@${DRONE_COMMIT}
     - go install -v .
