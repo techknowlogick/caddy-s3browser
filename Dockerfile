@@ -15,6 +15,7 @@ RUN mkdir -p /go/src/github.com/caddyserver/ && \
     go mod edit -replace github.com/techknowlogick/caddy-s3browser=/tmp/caddy-s3browser && \
     go install -v . && \
     /go/bin/caddy -version && \
+    mkdir -p /install && \
     cp /go/bin/caddy /install/caddy
 # last copy command is for backwards compatibility
 
