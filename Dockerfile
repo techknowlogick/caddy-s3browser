@@ -12,7 +12,7 @@ RUN mkdir -p /go/src/github.com/caddyserver/ && \
     git clone --branch v1.0.5 https://github.com/caddyserver/caddy.git /go/src/github.com/caddyserver/caddy && \
     cd /go/src/github.com/caddyserver/caddy/caddy && \
     sed -i '/This is where other plugins get plugged in (imported)/a _ "github.com/techknowlogick/caddy-s3browser"' caddymain/run.go && \
-    go mod edit -replace go get github.com/techknowlogick/caddy-s3browser=/tmp/caddy-s3browser && \
+    go mod edit -replace github.com/techknowlogick/caddy-s3browser=/tmp/caddy-s3browser && \
     go install -v . && \
     /go/bin/caddy -version && \
     cp /go/bin/caddy /install/caddy
