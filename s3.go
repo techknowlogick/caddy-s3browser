@@ -1,6 +1,8 @@
 package s3browser
 
 import (
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -46,4 +48,17 @@ func (c *S3Client) ForEachObject(fn func(*s3.Object)) error {
 			return true
 		},
 	)
+}
+
+func (c *S3Client) GetObject(filePath string, rangeHdr *string) (*s3.GetObjectOutput, error) {
+	filePath = strings.TrimLeft(filePath, "/")
+
+	req := s3.GetObjectInput{
+		Bucket: &c.bucket,
+		Key:    &filePath,
+		Range:  rangeHdr,
+	}
+
+	obj, err := c.s3.GetObject(&req)
+	return obj, err
 }

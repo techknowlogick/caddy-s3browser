@@ -11,7 +11,3 @@ s3browser {
 	refresh ${S3_REFRESH} # 5m
 	debug ${S3_DEBUG} # false
 }
-
-proxy / ${S3_PROTO}://${S3_HOST}${S3_EXTRA} {
-	header_upstream Host ${S3_HOST}
-}

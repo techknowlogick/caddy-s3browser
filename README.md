@@ -21,10 +21,6 @@ See `Caddyfile.tmpl` for a template.
 | debug     |  bool  |   `false`  | Output debug information |
 
 
-## Downloading Files
-
-To serve files via Caddy as well you'll need to use the `proxy` directive as well (see the template). The server must be able to have public access to the files in the bucket.
-
 ## Prior Art
 * This is based on the [Browse plugin](https://github.com/mholt/caddy/tree/master/caddyhttp/browse) that is built into Caddy
 * The template is based on the [browse template](https://github.com/dockhippie/caddy/blob/master/rootfs/etc/caddy/browse.tmpl) from Webhippie
