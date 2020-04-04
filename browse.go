@@ -11,6 +11,9 @@ import (
 	"github.com/caddyserver/caddy/caddyhttp/httpserver"
 )
 
+// Static check that Browse implements Caddy's Handler type
+var _ httpserver.Handler = (*Browse)(nil)
+
 type Browse struct {
 	Next     httpserver.Handler
 	Config   Config
