@@ -1,19 +1,19 @@
 package s3browser
 
 import (
-	"crypto/tls"
 	"log"
-	"net/http"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/dustin/go-humanize"
-	"github.com/minio/minio-go/v6"
 )
 
 type S3FsCache struct {
-	s3     *minio.Client
+	lock   sync.RWMutex
+	s3     S3Client
 	logger *log.Logger
 	bucket string
 	data   map[string]Directory
@@ -42,25 +42,10 @@ func (f File) HumanModTime(format string) string {
 }
 
 func NewS3Cache(cfg Config, l *log.Logger) (fs S3FsCache, err error) {
-	fs.bucket = cfg.Bucket
-	fs.logger = l
-
-	if cfg.Region == "" {
-		fs.s3, err = minio.New(cfg.Endpoint, cfg.Key, cfg.Secret, cfg.Secure)
-	} else {
-		fs.s3, err = minio.NewWithRegion(cfg.Endpoint, cfg.Key, cfg.Secret, cfg.Secure, cfg.Region)
-	}
-	if err != nil {
-		return
-	}
-
-	if !cfg.Secure {
-		fs.s3.SetCustomTransport(&http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		})
-	}
-
-	return fs, err
+	return S3FsCache{
+		s3:     NewS3Client(cfg),
+		logger: l,
+	}, nil
 }
 
 func (fs *S3FsCache) GetDir(dirPath string) (Directory, bool) {
@@ -87,20 +72,8 @@ func (fs *S3FsCache) Refresh() (err error) {
 	newData := map[string]Directory{}
 	addDirectory(fs.logger, newData, "/")
 
-	objectCh := fs.s3.ListObjectsV2(
-		fs.bucket,
-		"",   // prefix
-		true, // recursive
-		nil,  // doneChan
-	)
-
-	for obj := range objectCh {
-		if obj.Err != nil {
-			fs.logger.Printf("Err: %s", obj.Err)
-			continue
-		}
-
-		objDir, objName := path.Split(obj.Key)
+	fs.s3.ForEachObject(func(obj *s3.Object) {
+		objDir, objName := path.Split(*obj.Key)
 		objDir = normalizePath(objDir)
 
 		// Add any missing parent directories in `newData`
@@ -114,12 +87,12 @@ func (fs *S3FsCache) Refresh() (err error) {
 
 			fsCopy := newData[objDir]
 			fsCopy.Files[objName] = File{
-				Bytes: obj.Size,
-				Date:  obj.LastModified,
+				Bytes: *obj.Size,
+				Date:  *obj.LastModified,
 			}
 			newData[objDir] = fsCopy
 		}
-	}
+	})
 
 	fs.data = newData
 
