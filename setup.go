@@ -60,8 +60,10 @@ func setup(c *caddy.Controller) error {
 	go func() {
 		for {
 			select {
-			case <-b.Refresh: // refresh API call
-			case <-time.After(b.Config.Refresh * time.Second): // refresh after configured time
+			case <-b.Refresh:
+				l.Println("Refresh: API")
+			case <-time.After(b.Config.Refresh):
+				l.Println("Refresh: Periodic")
 			}
 			err := b.S3Cache.Refresh()
 			if err != nil {
