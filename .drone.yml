@@ -45,6 +45,8 @@ steps:
   - name: compile-and-run
     image: golang:1.14-alpine
     environment:
+      S3_SITENAME: "Test Site"
+      S3_REGION: us-east-1
       S3_DEBUG: true
       S3_KEY: 51bcaa680ac2fa4bb9f38bde4bf6f5620c542222393f95e2e6f6d38f838e3c17
       S3_SECRET: 51bcaa680ac2fa4bb9f38bde4bf6f5620c542222393f95e2e6f6d38f838e3c17
@@ -62,7 +64,7 @@ steps:
     - git clone --branch v1.0.5 https://github.com/caddyserver/caddy.git /go/src/github.com/caddyserver/caddy
     - cd /go/src/github.com/caddyserver/caddy/caddy
     - sed -i '/This is where other plugins get plugged in (imported)/a _ "github.com/techknowlogick/caddy-s3browser"' caddymain/run.go
-    - go get github.com/techknowlogick/caddy-s3browser@${DRONE_COMMIT}
+    - go mod edit -replace github.com/techknowlogick/caddy-s3browser=/drone/src
     - go install -v .
     - /go/bin/caddy -version
     - "envsubst < /drone/src/Caddyfile.tmpl > /drone/src/Caddyfile"
