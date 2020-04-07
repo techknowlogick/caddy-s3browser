@@ -23,6 +23,5 @@ See `Caddyfile.tmpl` for a template.
 
 ## Prior Art
 * This is based on the [Browse plugin](https://github.com/mholt/caddy/tree/master/caddyhttp/browse) that is built into Caddy
-* The template is based on the [browse template](https://github.com/dockhippie/caddy/blob/master/rootfs/etc/caddy/browse.tmpl) from Webhippie
 * [s3server](https://github.com/jessfraz/s3server) from jessfraz
 * [pretty-s3-index-html](https://github.com/nolanlawson/pretty-s3-index-html) by Nolan Lawson
