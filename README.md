@@ -1,26 +1,25 @@
 # Caddy s3browser
 
-## Example config
-```
-dl.example.com {
-	s3browser {
-		key ADDKEYHERE
-		secret ADDSECRETHERE
-		bucket ADDBUCKETHERE
-		endpoint nyc3.digitaloceanspaces.com
-		secure true
-		refresh 5m
-		debug false
-	}
-	proxy / https://examplebucket.nyc3.digitaloceanspaces.com {
-		header_upstream Host examplebucket.nyc3.digitaloceanspaces.com
-	}
-}
-```
+This will provide directory listing for an S3 bucket (you are able to use minio, or other S3 providers).
 
-This will provide directory listing for an S3 bucket (you are able to use minio, or other S3 providers). To serve files via Caddy as well you'll need to use the `proxy` directive as well. The server must be able to have public access to the files in the bucket.
+Note: For performance reasons, the file listing is fetched once every 5 minutes to reduce load on S3. You can force a refresh by sending a POST request to the plugin.
 
-Note: For performance reasons, the file listing is fetched once every 5minutes to reduce load on S3 (or S3 equivalent).
+## Configuration
+
+See `Caddyfile.tmpl` for a template.
+
+|  option   |  type  |  default   | help |
+|-----------|:------:|------------|------|
+| site_name | string | S3 Browser | Site display name |
+| endpoint  | string |            | S3 hostname |
+| region    | string |   empty    | S3 region (optional) |
+| key       | string |            | S3 access key |
+| secret    | string |            | S3 secret key |
+| secure    |  bool  |   `true`   | Use TLS when connection to S3 |
+| bucket    | string |            | S3 bucket |
+| refresh   | string |    `5m`    | Time between periodic refresh |
+| debug     |  bool  |   `false`  | Output debug information |
+
 
 ## Prior Art
 * This is based on the [Browse plugin](https://github.com/mholt/caddy/tree/master/caddyhttp/browse) that is built into Caddy
