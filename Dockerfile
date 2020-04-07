@@ -29,7 +29,8 @@ ENV S3_ENDPOINT=s3.amazonaws.com \
     S3_PROTO=https \
     S3_SECURE=true \
     S3_REFRESH=5m \
-    S3_DEBUG=false
+    S3_DEBUG=false \
+    S3_SITENAME="S3 Browser"
 
 COPY --from=builder /install/caddy /usr/sbin/caddy
 
