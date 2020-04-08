@@ -17,7 +17,7 @@ steps:
       - pull_request
 
   - name: create-test-bucket
-    image: minio/mc:RELEASE.2020-04-04T05-39-31Z 
+    image: minio/mc:RELEASE.2020-04-04T05-28-55Z
     commands:
     - sleep 4 # hope that minio has started by this point
     - mc config host add test http://objectstorage:9000 51bcaa680ac2fa4bb9f38bde4bf6f5620c542222393f95e2e6f6d38f838e3c17 51bcaa680ac2fa4bb9f38bde4bf6f5620c542222393f95e2e6f6d38f838e3c17
