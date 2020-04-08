@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/dustin/go-humanize"
+	"github.com/minio/minio-go/v6"
 )
 
 type S3FsCache struct {
@@ -72,8 +72,8 @@ func (fs *S3FsCache) Refresh() (err error) {
 	newData := map[string]Directory{}
 	addDirectory(fs.logger, newData, "/")
 
-	fs.s3.ForEachObject(func(obj *s3.Object) {
-		objDir, objName := path.Split(*obj.Key)
+	fs.s3.ForEachObject(func(obj minio.ObjectInfo) {
+		objDir, objName := path.Split(obj.Key)
 		objDir = normalizePath(objDir)
 
 		// Add any missing parent directories in `newData`
@@ -87,8 +87,8 @@ func (fs *S3FsCache) Refresh() (err error) {
 
 			fsCopy := newData[objDir]
 			fsCopy.Files[objName] = File{
-				Bytes: *obj.Size,
-				Date:  *obj.LastModified,
+				Bytes: obj.Size,
+				Date:  obj.LastModified,
 			}
 			newData[objDir] = fsCopy
 		}

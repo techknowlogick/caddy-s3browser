@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/caddyserver/caddy/caddyhttp/httpserver"
@@ -101,23 +100,23 @@ func (b Browse) renderHTML(w io.Writer, dir Directory) error {
 func (b Browse) serveFile(w http.ResponseWriter, r *http.Request, filePath string) (int, error) {
 	client := NewS3Client(b.Config)
 
-	var rangeHdr *string
+	var rangeHdr string
 	if val, ok := r.Header["Range"]; ok {
-		rangeHdr = &val[0]
+		rangeHdr = val[0]
 	}
 
-	obj, err := client.GetObject(filePath, rangeHdr)
+	reader, _, headers, err := client.GetObject(filePath, rangeHdr)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	w.Header().Set("Content-Type", *obj.ContentType)
-	w.Header().Set("Content-Length", strconv.FormatInt(*obj.ContentLength, 10))
-	if obj.ContentRange != nil {
-		w.Header().Set("Content-Range", *obj.ContentRange)
+	w.Header().Set("Content-Type", headers.Get("Content-Type"))
+	w.Header().Set("Content-Length", headers.Get("Content-Length"))
+	if headers.Get("Content-Range") != "" {
+		w.Header().Set("Content-Range", headers.Get("Content-Range"))
 	}
 
-	if _, err := io.Copy(w, obj.Body); err != nil {
+	if _, err := io.Copy(w, reader); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
