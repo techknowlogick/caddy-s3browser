@@ -102,6 +102,9 @@ func (fs *S3FsCache) Refresh() (err error) {
 
 // Ensure path starts with / and doesn't end with one
 func normalizePath(p string) string {
+	if p == "" {
+		return "/"
+	}
 	return "/" + strings.Trim(path.Clean(p), "/")
 }
 
