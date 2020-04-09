@@ -57,6 +57,7 @@ steps:
       S3_SECURE: false
       S3_PROTO: http
       S3_REFRESH: 25s
+      S3_SIGNED_URL_REDIRECT: true
       GO111MODULE: on
     commands:
     - apk add wget mailcap ca-certificates gettext libintl curl git
