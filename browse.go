@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/caddyserver/caddy/caddyhttp/httpserver"
 )
@@ -43,6 +44,9 @@ func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
 	}
 
 	if _, ok := b.S3Cache.GetFile(fullPath); ok {
+		if b.Config.SignedURLRedirect {
+			return b.signedRedirect(w, r, normalizePath(fullPath))
+		}
 		return b.serveFile(w, r, normalizePath(fullPath))
 	}
 
@@ -95,6 +99,16 @@ func (b Browse) renderHTML(w io.Writer, dir Directory) error {
 		SiteName: b.Config.SiteName,
 		Dir:      dir,
 	})
+}
+
+func (b Browse) signedRedirect(w http.ResponseWriter, r *http.Request, filePath string) (int, error) {
+	client := NewS3Client(b.Config)
+	url, err := client.s3.PresignedGetObject(b.Config.Bucket, filePath[1:], 10*time.Minute, nil)
+	if err != nil {
+
+	}
+	http.Redirect(w, r, url.String(), http.StatusTemporaryRedirect)
+	return http.StatusTemporaryRedirect, nil
 }
 
 func (b Browse) serveFile(w http.ResponseWriter, r *http.Request, filePath string) (int, error) {

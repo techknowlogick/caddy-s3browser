@@ -8,15 +8,16 @@ import (
 )
 
 type Config struct {
-	SiteName string
-	Endpoint string
-	Region   string
-	Key      string
-	Secret   string
-	Secure   bool
-	Bucket   string
-	Refresh  time.Duration
-	Debug    bool
+	SiteName          string
+	Endpoint          string
+	Region            string
+	Key               string
+	Secret            string
+	Secure            bool
+	Bucket            string
+	Refresh           time.Duration
+	Debug             bool
+	SignedURLRedirect bool
 }
 
 func ParseConfig(c *caddy.Controller) (cfg Config, err error) {
@@ -50,6 +51,8 @@ func ParseConfig(c *caddy.Controller) (cfg Config, err error) {
 			cfg.Refresh, err = parseDurationArg(c)
 		case "debug":
 			cfg.Debug, err = parseBoolArg(c)
+		case "signed_url_redirect":
+			cfg.SignedURLRedirect, err = parseBoolArg(c)
 		default:
 			err = c.Errf("not a valid s3browser option")
 		}
