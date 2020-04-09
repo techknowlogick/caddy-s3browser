@@ -54,6 +54,12 @@ func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
 }
 
 func (b Browse) serveAPI(w http.ResponseWriter, r *http.Request) (int, error) {
+	if b.Config.APISecret != "" {
+		if _, pwd, ok := r.BasicAuth(); !ok || pwd != b.Config.APISecret {
+			return http.StatusUnauthorized, nil
+		}
+	}
+
 	// trigger refresh
 	b.Refresh <- struct{}{}
 	return http.StatusOK, nil

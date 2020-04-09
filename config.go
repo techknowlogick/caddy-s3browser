@@ -15,6 +15,7 @@ type Config struct {
 	Secret            string
 	Secure            bool
 	Bucket            string
+	APISecret         string
 	Refresh           time.Duration
 	Debug             bool
 	SignedURLRedirect bool
@@ -47,6 +48,8 @@ func ParseConfig(c *caddy.Controller) (cfg Config, err error) {
 			cfg.Bucket, err = parseStringArg(c)
 		case "secure":
 			cfg.Secure, err = parseBoolArg(c)
+		case "refresh_api_secret":
+			cfg.APISecret, err = parseStringArg(c)
 		case "refresh":
 			cfg.Refresh, err = parseDurationArg(c)
 		case "debug":

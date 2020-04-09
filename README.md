@@ -18,8 +18,22 @@ See `Caddyfile.tmpl` for a template.
 | secure              |  bool  |   `true`   | Use TLS when connection to S3 |
 | bucket              | string |            | S3 bucket |
 | refresh             | string |    `5m`    | Time between periodic refresh |
+| refresh_api_secret  | string |   empty    | A key to protect the refresh API. (optional) |
 | debug               |  bool  |   `false`  | Output debug information |
 | signed_url_redirect |  bool  |   `false`  | Output debug information |
+
+
+## Force Refresh
+
+You can trigger a force refresh by making a POST request to the server:
+```bash
+curl -X POST "$HOST"
+```
+
+When `refresh_api_secret` is set, you must use HTTP basic auth:
+```bash
+curl -X POST "api:$SECRET@$HOST" # the username can be anything
+```
 
 
 ## Prior Art
