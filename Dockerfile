@@ -31,7 +31,8 @@ ENV S3_ENDPOINT=s3.amazonaws.com \
     S3_REFRESH=5m \
     S3_DEBUG=false \
     S3_SITENAME="S3 Browser" \
-    S3_REGION="us-east-1"
+    S3_REGION="us-east-1" \
+    S3_SIGNED_URL_REDIRECT=false
 
 COPY --from=builder /install/caddy /usr/sbin/caddy
 

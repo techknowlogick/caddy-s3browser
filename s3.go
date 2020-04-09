@@ -30,7 +30,7 @@ func (c *S3Client) ForEachObject(fn func(minio.ObjectInfo)) error {
 	doneCh := make(chan struct{})
 	defer close(doneCh)
 
-	objectCh := c.s3.ListObjectsV2(c.bucket, "", true, doneCh)
+	objectCh := c.s3.ListObjects(c.bucket, "", true, doneCh)
 	for object := range objectCh {
 		if object.Err != nil {
 			return object.Err
