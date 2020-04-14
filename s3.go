@@ -43,7 +43,7 @@ func (c *S3Client) ForEachObject(fn func(minio.ObjectInfo)) error {
 func (c *S3Client) GetObject(filePath string, rangeHdr string) (io.ReadCloser, minio.ObjectInfo, http.Header, error) {
 	filePath = strings.TrimLeft(filePath, "/")
 	objectOptions := minio.GetObjectOptions{}
-	objectOptions.Header().Set("Range", rangeHdr)
+	objectOptions.Set("Range", rangeHdr)
 	coreClient := minio.Core{Client: c.s3}
 	return coreClient.GetObject(c.bucket, filePath, objectOptions)
 }
