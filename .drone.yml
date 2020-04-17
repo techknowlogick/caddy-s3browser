@@ -57,6 +57,7 @@ steps:
       S3_SECURE: false
       S3_PROTO: http
       S3_REFRESH: 25s
+      S3_REFRESH_SECRET: "secret"
       S3_SIGNED_URL_REDIRECT: true
       GO111MODULE: on
     commands:
@@ -74,6 +75,7 @@ steps:
     - sleep 6
     - "curl -v localhost"
     - "curl -v -H \"Accept: application/json\" localhost"
+    - "curl -v -X POST 'api:$S3_REFRESH_SECRET@localhost'"
 
 services:
 - name: objectstorage
