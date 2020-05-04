@@ -3,7 +3,7 @@ module github.com/techknowlogick/caddy-s3browser
 go 1.14
 
 require (
-	github.com/caddyserver/caddy v1.0.5
+	github.com/caddyserver/caddy/v2/v2 v2.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/minio/minio-go/v6 v6.0.55
 	github.com/stretchr/testify v1.5.1 // indirect
