@@ -3,8 +3,10 @@ module github.com/techknowlogick/caddy-s3browser
 go 1.14
 
 require (
+	github.com/Masterminds/semver v1.5.0
 	github.com/caddyserver/caddy v1.0.5
 	github.com/dustin/go-humanize v1.0.0
+	github.com/go-acme/lego/v3 v3.2.0
 	github.com/minio/minio-go/v6 v6.0.55
 	github.com/stretchr/testify v1.5.1 // indirect
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71 // indirect

@@ -3,12 +3,22 @@ package s3browser
 import (
 	"html/template"
 	"path"
+	"regexp"
+	"sort"
 	"strings"
+
+	"github.com/Masterminds/semver"
 )
 
+// semVerRegex is the regular expression used to parse a partial semantic version.
+// We rely on github.com/Masterminds/semver for the actual parsing, but
+// we want to consider the edge cases 1.0.0 vs. 1.0 vs 1.
+var semVerRegex = regexp.MustCompile(`^v?([0-9]+)(\.[0-9]+)?(\.[0-9]+)?`)
+
 type TemplateArgs struct {
-	SiteName string
-	Dir      Directory
+	SiteName     string
+	Dir          Directory
+	SemanticSort bool
 }
 
 type Crumb struct {
@@ -16,14 +26,46 @@ type Crumb struct {
 	Name string
 }
 
+type collection []*semver.Version
+
 func parseTemplate() (*template.Template, error) {
 	funcs := template.FuncMap{
+		"SemSort":     semSort,
 		"Breadcrumbs": breadcrumbs,
 		"PathBase":    path.Base,
 		"PathDir":     path.Dir,
 		"PathJoin":    path.Join,
 	}
 	return template.New("listing").Funcs(funcs).Parse(defaultTemplate)
+}
+
+func semSort(args TemplateArgs, folders []string) []string {
+	// No sorting if disabled
+	if !args.SemanticSort {
+		return folders
+	}
+
+	// Create one list with semver named folders, and one with the others
+	internal := make([]*semver.Version, 0, len(folders))
+	unversioned := make([]string, 0)
+	for _, folder := range folders {
+		version, err := semver.NewVersion(folder)
+		if err != nil {
+			// Folders not matching a version number go last
+			unversioned = append(unversioned, folder)
+			continue
+		}
+		internal = append(internal, version)
+	}
+
+	sort.Sort(collection(internal))
+
+	versioned := make([]string, len(internal))
+	for i := range internal {
+		versioned[i] = internal[i].Original()
+	}
+
+	return append(versioned, unversioned...)
 }
 
 func breadcrumbs(args TemplateArgs) []Crumb {
@@ -44,6 +86,28 @@ func breadcrumbs(args TemplateArgs) []Crumb {
 	}
 
 	return crumbs
+}
+
+func (c collection) Len() int {
+	return len(c)
+}
+
+func (c collection) Less(i, j int) bool {
+	// Note: this function sorts backwards;
+	// we invert j with i
+	if c[i].Equal(c[j]) {
+		// 1.1 is less than 1.1.0
+		mi := semVerRegex.FindStringSubmatch(c[i].Original())
+		mj := semVerRegex.FindStringSubmatch(c[j].Original())
+		if mi != nil && mj != nil {
+			return len(mj[0]) < len(mi[0])
+		}
+	}
+	return c[j].LessThan(c[i])
+}
+
+func (c collection) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
 }
 
 const defaultTemplate = `<!DOCTYPE html>
@@ -219,7 +283,7 @@ footer {
 	}
 }
 </style>
-	<!-- template source from https://github.com/caddyserver/caddy/blob/a2d71bdd94c0ca51dfb3b816b61911dac799581f/caddyhttp/browse/setup.go -->
+<!-- template source from https://github.com/caddyserver/caddy/blob/a2d71bdd94c0ca51dfb3b816b61911dac799581f/caddyhttp/browse/setup.go -->
 	</head>
 	<body>
 		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="0" width="0" style="position: absolute;">
@@ -275,7 +339,7 @@ footer {
 						<td class="hideable"></td>
 					</tr>
 					{{- end}}
-					{{ range $name := .Dir.Folders }}
+					{{ range $name := SemSort $ .Dir.Folders }}
 						<tr class="file">
 							<td></td>
 							<td>
