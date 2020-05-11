@@ -41,6 +41,15 @@ steps:
     - mc cp last.txt test/s3browser-test/one/two/three/four/
     #- mc rm test/s3browser-test/one/two/another.txt
     #- mc rm test/s3browser-test/one/two/three/another.txt
+    - mc cp one.txt test/s3browser-test/1.1.0/
+    - mc cp one.txt test/s3browser-test/1.1/
+    - mc cp one.txt test/s3browser-test/1/
+    - mc cp one.txt test/s3browser-test/1.2.0/
+    - mc cp one.txt test/s3browser-test/1.2.0-dev/
+    - mc cp one.txt test/s3browser-test/1.10.0/
+    - mc cp one.txt test/s3browser-test/1.10/
+    - mc cp one.txt test/s3browser-test/1.10.0-rc1/
+    - mc cp one.txt test/s3browser-test/1.11.0/
 
   - name: compile-and-run
     image: caddy:2.2.1-builder-alpine
@@ -59,6 +68,7 @@ steps:
       S3_REFRESH: 25s
       S3_REFRESH_SECRET: "secret"
       S3_SIGNED_URL_REDIRECT: true
+      S3_SEMANTIC_SORT: true
       GO111MODULE: on
     commands:
     - apk add wget mailcap ca-certificates gettext libintl curl git

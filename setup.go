@@ -52,6 +52,7 @@ type S3Browser struct {
 	RefreshAPISecret  string        `json:"refresh_api_secret,omitempty"`
 	Debug             bool          `json:"debug,omitempty"`
 	SignedURLRedirect bool          `json:"signed_url_redirect,omitempty"`
+	SemanticSort      bool          `json:"semantic_sort,omitempty"`
 
 	s3Cache        S3FsCache
 	template       *template.Template
@@ -95,6 +96,8 @@ func (b *S3Browser) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 			err = parseBoolArg(d, &b.Debug)
 		case "signed_url_redirect":
 			err = parseBoolArg(d, &b.SignedURLRedirect)
+		case "semantic_sort":
+			err = parseBoolArg(d, &b.SemanticSort)
 		default:
 			err = d.Errf("not a valid s3browser option")
 		}
