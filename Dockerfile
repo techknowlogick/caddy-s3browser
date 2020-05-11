@@ -34,7 +34,8 @@ ENV S3_ENDPOINT=s3.amazonaws.com \
     S3_SITENAME="S3 Browser" \
     S3_REGION="us-east-1" \
     S3_SIGNED_URL_REDIRECT=false \
-    S3_SKIP_SERVING=false
+    S3_SKIP_SERVING=false \
+    S3_SEMANTIC_SORT=false
 
 COPY --from=builder /install/caddy /usr/sbin/caddy
 

@@ -19,6 +19,7 @@ type Config struct {
 	Refresh           time.Duration
 	Debug             bool
 	SignedURLRedirect bool
+	SemanticSort      bool
 	SkipServing       bool
 }
 
@@ -57,6 +58,8 @@ func ParseConfig(c *caddy.Controller) (cfg Config, err error) {
 			cfg.Debug, err = parseBoolArg(c)
 		case "signed_url_redirect":
 			cfg.SignedURLRedirect, err = parseBoolArg(c)
+		case "semantic_sort":
+			cfg.SemanticSort, err = parseBoolArg(c)
 		case "skip_serving":
 			cfg.SkipServing, err = parseBoolArg(c)
 		default:

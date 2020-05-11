@@ -105,8 +105,9 @@ func (b Browse) renderJSON(w io.Writer, dir Directory) error {
 
 func (b Browse) renderHTML(w io.Writer, dir Directory) error {
 	return b.Template.Execute(w, TemplateArgs{
-		SiteName: b.Config.SiteName,
-		Dir:      dir,
+		SiteName:     b.Config.SiteName,
+		Dir:          dir,
+		SemanticSort: b.Config.SemanticSort,
 	})
 }
 
