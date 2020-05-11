@@ -19,6 +19,7 @@ type Config struct {
 	Refresh           time.Duration
 	Debug             bool
 	SignedURLRedirect bool
+	SkipServing       bool
 }
 
 func ParseConfig(c *caddy.Controller) (cfg Config, err error) {
