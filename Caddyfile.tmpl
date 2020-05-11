@@ -12,4 +12,9 @@ s3browser {
 	refresh_api_secret ${S3_REFRESH_SECRET}
 	debug ${S3_DEBUG} # false
 	signed_url_redirect ${S3_SIGNED_URL_REDIRECT} # false
+	skip_serving ${S3_SKIP_SERVING} #false
+}
+
+proxy / ${S3_PROTO}://${S3_HOST}${S3_EXTRA} {
+	header_upstream Host ${S3_HOST}
 }

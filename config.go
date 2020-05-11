@@ -20,6 +20,7 @@ type Config struct {
 	Debug             bool
 	SignedURLRedirect bool
 	SemanticSort      bool
+	SkipServing       bool
 }
 
 func ParseConfig(c *caddy.Controller) (cfg Config, err error) {
@@ -59,6 +60,8 @@ func ParseConfig(c *caddy.Controller) (cfg Config, err error) {
 			cfg.SignedURLRedirect, err = parseBoolArg(c)
 		case "semantic_sort":
 			cfg.SemanticSort, err = parseBoolArg(c)
+		case "skip_serving":
+			cfg.SkipServing, err = parseBoolArg(c)
 		default:
 			err = c.Errf("not a valid s3browser option")
 		}

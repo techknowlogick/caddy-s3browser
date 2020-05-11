@@ -47,6 +47,9 @@ func (b Browse) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
 		if b.Config.SignedURLRedirect {
 			return b.signedRedirect(w, r, normalizePath(fullPath))
 		}
+		if b.Config.SkipServing {
+			return b.Next.ServeHTTP(w, r)
+		}
 		return b.serveFile(w, r, normalizePath(fullPath))
 	}
 
