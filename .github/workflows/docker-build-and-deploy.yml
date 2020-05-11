@@ -2,7 +2,7 @@ name: build-and-deploy-docker
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, caddy-v1 ]
 
 jobs:
   build:
