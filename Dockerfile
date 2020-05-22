@@ -41,4 +41,4 @@ COPY --from=builder /install/caddy /usr/sbin/caddy
 
 COPY Caddyfile.tmpl /etc/caddy/Caddyfile.tmpl
 
-CMD /bin/sh -c "envsubst < /etc/caddy/Caddyfile.tmpl > /etc/caddy/Caddyfile && /usr/sbin/caddy run --conf /etc/caddy/Caddyfile"
+CMD /bin/sh -c "envsubst < /etc/caddy/Caddyfile.tmpl > /etc/caddy/Caddyfile && /usr/sbin/caddy run -conf /etc/caddy/Caddyfile"
