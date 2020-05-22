@@ -4,16 +4,18 @@ log {
 	output stderr
 }
 
-s3browser {
-	site_name "${S3_SITENAME}" # S3 Browser
-	endpoint "${S3_ENDPOINT}"
-	region "${S3_REGION}"
-	key "${S3_KEY}"
-	secret "${S3_SECRET}"
-	secure ${S3_SECURE} # true
-	bucket "${S3_BUCKET}"
-	refresh_interval "${S3_REFRESH}" # 5m
-	refresh_api_secret "${S3_REFRESH_SECRET}"
-	debug "${S3_DEBUG}" # false
-	signed_url_redirect ${S3_SIGNED_URL_REDIRECT} # false
+route {
+	s3browser {
+		site_name "${S3_SITENAME}" # S3 Browser
+		endpoint "${S3_ENDPOINT}"
+		region "${S3_REGION}"
+		key "${S3_KEY}"
+		secret "${S3_SECRET}"
+		secure ${S3_SECURE} # true
+		bucket "${S3_BUCKET}"
+		refresh_interval "${S3_REFRESH}" # 5m
+		refresh_api_secret "${S3_REFRESH_SECRET}"
+		debug "${S3_DEBUG}" # false
+		signed_url_redirect ${S3_SIGNED_URL_REDIRECT} # false
+	}
 }
