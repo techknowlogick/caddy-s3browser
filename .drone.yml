@@ -62,10 +62,12 @@ steps:
       GO111MODULE: on
     commands:
     - apk add wget mailcap ca-certificates gettext libintl curl git
-    - mkdir -p /go/src/github.com/caddyserver/
-    - git clone --branch v1.0.5 https://github.com/caddyserver/caddy.git /go/src/github.com/caddyserver/caddy
-    - cd /go/src/github.com/caddyserver/caddy/caddy
-    - sed -i '/This is where other plugins get plugged in (imported)/a _ "github.com/techknowlogick/caddy-s3browser"' caddymain/run.go
+    - mkdir -p /go/src/github.com/caddyserver/caddy
+    - cd /go/src/github.com/caddyserver/caddy
+    - wget https://raw.githubusercontent.com/caddyserver/caddy/v2.0.0/cmd/caddy/main.go
+    - sed -i '/plug in Caddy modules here/a _ "github.com/techknowlogick/caddy-s3browser"' main.go
+    - go mod init caddy
+    - go get github.com/caddyserver/caddy/v2@v2.0.0
     - go mod edit -replace github.com/techknowlogick/caddy-s3browser=/drone/src
     - go install -v .
     - /go/bin/caddy -version
