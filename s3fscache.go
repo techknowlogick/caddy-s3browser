@@ -13,7 +13,7 @@ import (
 
 type S3FsCache struct {
 	lock   sync.RWMutex
-	s3     S3Client
+	s3     *S3Client
 	logger *log.Logger
 	bucket string
 	data   map[string]Directory
@@ -41,8 +41,8 @@ func (f File) HumanModTime(format string) string {
 	return f.Date.Format(format)
 }
 
-func NewS3Cache(cfg Config, l *log.Logger) (fs S3FsCache, err error) {
-	return S3FsCache{
+func NewS3Cache(cfg Config, l *log.Logger) (fs *S3FsCache, err error) {
+	return &S3FsCache{
 		s3:     NewS3Client(cfg),
 		logger: l,
 	}, nil

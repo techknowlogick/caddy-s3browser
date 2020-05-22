@@ -17,7 +17,7 @@ var _ httpserver.Handler = (*Browse)(nil)
 type Browse struct {
 	Next     httpserver.Handler
 	Config   Config
-	S3Cache  S3FsCache
+	S3Cache  *S3FsCache
 	Template *template.Template
 	Refresh  chan struct{}
 }
