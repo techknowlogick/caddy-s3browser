@@ -14,6 +14,7 @@ s3browser {
 	signed_url_redirect ${S3_SIGNED_URL_REDIRECT} # false
 	skip_serving ${S3_SKIP_SERVING} # false
 	semantic_sort ${S3_SEMANTIC_SORT} # false
+	allow_customization ${S3_ALLOW_CUSTOMIZATION} # false
 }
 
 proxy / ${S3_PROTO}://${S3_HOST}${S3_EXTRA} {
