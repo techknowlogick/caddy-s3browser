@@ -14,13 +14,13 @@ type S3Client struct {
 	bucket string
 }
 
-func NewS3Client(cfg Config) S3Client {
+func NewS3Client(cfg Config) *S3Client {
 	minioClient, err := minio.New(cfg.Endpoint, cfg.Key, cfg.Secret, cfg.Secure)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	return S3Client{
+	return &S3Client{
 		s3:     minioClient,
 		bucket: cfg.Bucket,
 	}
