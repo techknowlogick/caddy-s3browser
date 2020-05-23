@@ -17,14 +17,17 @@ type S3FsCache struct {
 	logger             *log.Logger
 	bucket             string
 	data               map[string]Directory
+	semSort            bool
 	allowCustomization bool
 }
 
 type Directory struct {
-	Path          string
-	Folders       []string
-	Files         map[string]File
-	Customization []*CustomizationConfig
+	Path                string
+	Folders             []string
+	Files               map[string]File
+	renderCustomization []*customizationConfig
+	RenderedDirs        []*RenderizableDir
+	RenderedFiles       []*RenderizableFile
 }
 
 type File struct {
@@ -47,6 +50,7 @@ func NewS3Cache(cfg Config, l *log.Logger) (fs *S3FsCache, err error) {
 	return &S3FsCache{
 		s3:                 NewS3Client(cfg),
 		logger:             l,
+		semSort:            cfg.SemanticSort,
 		allowCustomization: cfg.AllowCustomization,
 	}, nil
 }
@@ -88,9 +92,9 @@ func (fs *S3FsCache) Refresh() (err error) {
 		if objName != "" { // "": obj is the directory itself
 			if fs.allowCustomization && objName == customizationFile {
 				fs.logger.Printf("+ customization file: %s/%s\n", objDir, objName)
-				if customization := getCustomization(fs.logger, fs.s3, obj); customization != nil {
+				if renderCustomization := getRenderCustomization(fs.logger, fs.s3, obj); renderCustomization != nil {
 					fsCopy := newData[objDir]
-					fsCopy.Customization = customization
+					fsCopy.renderCustomization = renderCustomization
 					newData[objDir] = fsCopy
 				}
 			} else {
@@ -105,6 +109,12 @@ func (fs *S3FsCache) Refresh() (err error) {
 			}
 		}
 	})
+
+	for k := range newData {
+		dir := newData[k]
+		dir.Render(fs.semSort)
+		newData[k] = dir
+	}
 
 	fs.data = newData
 
@@ -139,9 +149,10 @@ func addDirectory(logger *log.Logger, outData map[string]Directory, dirPath stri
 
 			// Add own Node
 			outData[currPath] = Directory{
-				Path:    currPath,
-				Folders: []string{},
-				Files:   map[string]File{},
+				Path:                currPath,
+				Folders:             []string{},
+				Files:               map[string]File{},
+				renderCustomization: parentNode.renderCustomization,
 			}
 		}
 

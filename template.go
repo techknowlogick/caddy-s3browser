@@ -3,17 +3,8 @@ package s3browser
 import (
 	"html/template"
 	"path"
-	"regexp"
-	"sort"
 	"strings"
-
-	"github.com/Masterminds/semver"
 )
-
-// semVerRegex is the regular expression used to parse a partial semantic version.
-// We rely on github.com/Masterminds/semver for the actual parsing, but
-// we want to consider the edge cases 1.0.0 vs. 1.0 vs 1.
-var semVerRegex = regexp.MustCompile(`^v?([0-9]+)(\.[0-9]+)?(\.[0-9]+)?`)
 
 type TemplateArgs struct {
 	SiteName     string
@@ -26,46 +17,14 @@ type Crumb struct {
 	Name string
 }
 
-type collection []*semver.Version
-
 func parseTemplate() (*template.Template, error) {
 	funcs := template.FuncMap{
-		"SemSort":     semSort,
 		"Breadcrumbs": breadcrumbs,
 		"PathBase":    path.Base,
 		"PathDir":     path.Dir,
 		"PathJoin":    path.Join,
 	}
 	return template.New("listing").Funcs(funcs).Parse(defaultTemplate)
-}
-
-func semSort(args TemplateArgs, folders []string) []string {
-	// No sorting if disabled
-	if !args.SemanticSort {
-		return folders
-	}
-
-	// Create one list with semver named folders, and one with the others
-	internal := make([]*semver.Version, 0, len(folders))
-	unversioned := make([]string, 0)
-	for _, folder := range folders {
-		version, err := semver.NewVersion(folder)
-		if err != nil {
-			// Folders not matching a version number go last
-			unversioned = append(unversioned, folder)
-			continue
-		}
-		internal = append(internal, version)
-	}
-
-	sort.Sort(collection(internal))
-
-	versioned := make([]string, len(internal))
-	for i := range internal {
-		versioned[i] = internal[i].Original()
-	}
-
-	return append(versioned, unversioned...)
 }
 
 func breadcrumbs(args TemplateArgs) []Crumb {
@@ -86,28 +45,6 @@ func breadcrumbs(args TemplateArgs) []Crumb {
 	}
 
 	return crumbs
-}
-
-func (c collection) Len() int {
-	return len(c)
-}
-
-func (c collection) Less(i, j int) bool {
-	// Note: this function sorts backwards;
-	// we invert j with i
-	if c[i].Equal(c[j]) {
-		// 1.1 is less than 1.1.0
-		mi := semVerRegex.FindStringSubmatch(c[i].Original())
-		mj := semVerRegex.FindStringSubmatch(c[j].Original())
-		if mi != nil && mj != nil {
-			return len(mj[0]) < len(mi[0])
-		}
-	}
-	return c[j].LessThan(c[i])
-}
-
-func (c collection) Swap(i, j int) {
-	c[i], c[j] = c[j], c[i]
 }
 
 const defaultTemplate = `<!DOCTYPE html>
@@ -197,11 +134,10 @@ tbody tr:hover {
 th,
 td {
 	text-align: left;
-	padding: 10px 0;
+	padding: 10px;
 }
 th {
-	padding-top: 15px;
-	padding-bottom: 15px;
+	padding: 15px 10px;
 	font-size: 16px;
 	white-space: nowrap;
 }
@@ -216,10 +152,7 @@ td {
 	font-size: 14px;
 }
 td:nth-child(2) {
-	width: 80%;
-}
-td:nth-child(3) {
-	padding: 0 20px 0 20px;
+	width: auto;
 }
 th:nth-child(4),
 td:nth-child(4) {
@@ -298,6 +231,26 @@ footer {
 					<path d="M13 24.12v274.76c0 6.16 5.87 11.12 13.17 11.12H239c7.3 0 13.17-4.96 13.17-11.12V136.15S132.6 13 128.37 13H26.17C18.87 13 13 17.96 13 24.12z"/>
 					<path d="M129.37 13L129 113.9c0 10.58 7.26 19.1 16.27 19.1H249L129.37 13z"/>
 				</g>
+				<!-- FIXME: GAP current -->
+				<g id="current" fill-rule="nonzero" fill="none">
+					<path d="M285.22 37.55h-142.6L110.9 0H31.7C14.25 0 0 16.9 0 37.55v75.1h316.92V75.1c0-20.65-14.26-37.55-31.7-37.55z" fill="#FFA000"/>
+					<path d="M285.22 36H31.7C14.25 36 0 50.28 0 67.74v158.7c0 17.47 14.26 31.75 31.7 31.75H285.2c17.44 0 31.7-14.3 31.7-31.75V67.75c0-17.47-14.26-31.75-31.7-31.75z" fill="#ff8080"/>
+				</g>
+				<!-- FIXME: GAP release -->
+				<g id="release" fill-rule="nonzero" fill="none">
+					<path d="M285.22 37.55h-142.6L110.9 0H31.7C14.25 0 0 16.9 0 37.55v75.1h316.92V75.1c0-20.65-14.26-37.55-31.7-37.55z" fill="#FFA000"/>
+					<path d="M285.22 36H31.7C14.25 36 0 50.28 0 67.74v158.7c0 17.47 14.26 31.75 31.7 31.75H285.2c17.44 0 31.7-14.3 31.7-31.75V67.75c0-17.47-14.26-31.75-31.7-31.75z" fill="#80ff80"/>
+				</g>
+				<!-- FIXME: GAP working -->
+				<g id="working" fill-rule="nonzero" fill="none">
+					<path d="M285.22 37.55h-142.6L110.9 0H31.7C14.25 0 0 16.9 0 37.55v75.1h316.92V75.1c0-20.65-14.26-37.55-31.7-37.55z" fill="#FFA000"/>
+					<path d="M285.22 36H31.7C14.25 36 0 50.28 0 67.74v158.7c0 17.47 14.26 31.75 31.7 31.75H285.2c17.44 0 31.7-14.3 31.7-31.75V67.75c0-17.47-14.26-31.75-31.7-31.75z" fill="#8080ff"/>
+				</g>
+				<!-- FIXME: GAP older -->
+				<g id="older" fill-rule="nonzero" fill="none">
+					<path d="M285.22 37.55h-142.6L110.9 0H31.7C14.25 0 0 16.9 0 37.55v75.1h316.92V75.1c0-20.65-14.26-37.55-31.7-37.55z" fill="#FFA000"/>
+					<path d="M285.22 36H31.7C14.25 36 0 50.28 0 67.74v158.7c0 17.47 14.26 31.75 31.7 31.75H285.2c17.44 0 31.7-14.3 31.7-31.75V67.75c0-17.47-14.26-31.75-31.7-31.75z" fill="#ff80ff"/>
+				</g>
 			</defs>
 		</svg>
 		<header>
@@ -313,8 +266,11 @@ footer {
 					<thead>
 					<tr>
 						<th></th>
-						<th>
+						<th class="name">
 							Name
+						</th>
+						<th class="description">
+							Description
 						</th>
 						<th>
 							Size
@@ -336,34 +292,37 @@ footer {
 						</td>
 						<td>&mdash;</td>
 						<td class="hideable">&mdash;</td>
+						<td class="hideable">&mdash;</td>
 						<td class="hideable"></td>
 					</tr>
 					{{- end}}
-					{{ range $name := SemSort $ .Dir.Folders }}
+					{{ range $dir := .Dir.RenderedDirs }}
 						<tr class="file">
 							<td></td>
 							<td>
-								<a href="{{ html (PathJoin $.Dir.Path $name) }}">
-									<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 317 259"><use xlink:href="#folder"></use></svg>
-									<span class="name">{{ html $name }}</span>
+								<a href="{{ html (PathJoin $.Dir.Path $dir.Name) }}">
+									<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 317 259"><use xlink:href="#{{$dir.Icon}}"></use></svg>
+									<span class="name">{{ html $dir.Name }}</span>
 								</a>
 							</td>
+							<td>{{ $dir.Description }}</td>
 							<td>&mdash;</td>
 							<td class="hideable">&mdash;</td>
 							<td class="hideable"></td>
 						</tr>
 					{{ end }}
-					{{ range $name, $info := .Dir.Files }}
+					{{ range $file := .Dir.RenderedFiles }}
 						<tr class="file">
 							<td></td>
 							<td>
-								<a href="{{ html (PathJoin $.Dir.Path $name) }}">
-									<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 265 323"><use xlink:href="#file"></use></svg>
-									<span class="name">{{html $name}}</span>
+								<a href="{{ html (PathJoin $.Dir.Path $file.Name) }}">
+									<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 265 323"><use xlink:href="#{{ $file.Icon }}"></use></svg>
+									<span class="name">{{html $file.Name}}</span>
 								</a>
 							</td>
-							<td>{{ $info.HumanSize }}</td>
-							<td class="hideable"><time datetime="{{ $info.HumanModTime "2006-01-02T15:04:05Z" }}">{{ $info.HumanModTime "01/02/2006 03:04:05 PM -07:00" }}</time></td>
+							<td>{{ $file.Description }}</td>
+							<td>{{ $file.HumanSize }}</td>
+							<td class="hideable"><time datetime="{{ $file.HumanModTime "2006-01-02T15:04:05Z" }}">{{ $file.HumanModTime "01/02/2006 03:04:05 PM -07:00" }}</time></td>
 							<td class="hideable"></td>
 						</tr>
 					{{- end}}
