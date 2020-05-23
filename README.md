@@ -4,6 +4,16 @@ This will provide directory listing for an S3 bucket (you are able to use minio,
 
 Note: For performance reasons, the file listing is fetched once every 5 minutes to reduce load on S3. You can force a refresh by sending a POST request to the plugin.
 
+## Building
+
+Use [xcaddy](https://github.com/caddyserver/xcaddy) to build.
+
+Example:
+````bash
+$ go get -u github.com/caddyserver/xcaddy/cmd/xcaddy
+$ xcaddy build --output ./caddy --with github.com/techknowlogick/caddy-s3browser
+````
+
 ## Configuration
 
 See `Caddyfile.tmpl` for a template.

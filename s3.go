@@ -2,7 +2,6 @@ package s3browser
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"strings"
 
@@ -14,16 +13,13 @@ type S3Client struct {
 	bucket string
 }
 
-func NewS3Client(cfg Config) S3Client {
-	minioClient, err := minio.New(cfg.Endpoint, cfg.Key, cfg.Secret, cfg.Secure)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return S3Client{
+func NewS3Client(endpoint, key, secret string, secure bool, bucket string) (S3Client, error) {
+	minioClient, err := minio.New(endpoint, key, secret, secure)
+	c := S3Client{
 		s3:     minioClient,
-		bucket: cfg.Bucket,
+		bucket: bucket,
 	}
+	return c, err
 }
 
 func (c *S3Client) ForEachObject(fn func(minio.ObjectInfo)) error {

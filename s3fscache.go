@@ -1,7 +1,6 @@
 package s3browser
 
 import (
-	"log"
 	"path"
 	"strings"
 	"sync"
@@ -9,12 +8,13 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/minio/minio-go/v6"
+	"go.uber.org/zap"
 )
 
 type S3FsCache struct {
 	lock   sync.RWMutex
 	s3     S3Client
-	logger *log.Logger
+	logger *zap.Logger
 	bucket string
 	data   map[string]Directory
 }
@@ -41,9 +41,9 @@ func (f File) HumanModTime(format string) string {
 	return f.Date.Format(format)
 }
 
-func NewS3Cache(cfg Config, l *log.Logger) (fs S3FsCache, err error) {
+func NewS3Cache(client S3Client, l *zap.Logger) (fs S3FsCache, err error) {
 	return S3FsCache{
-		s3:     NewS3Client(cfg),
+		s3:     client,
 		logger: l,
 	}, nil
 }
@@ -67,7 +67,7 @@ func (fs *S3FsCache) GetFile(filePath string) (File, bool) {
 }
 
 func (fs *S3FsCache) Refresh() (err error) {
-	fs.logger.Println("Refreshing S3 cache")
+	fs.logger.Info("Refreshing S3 cache")
 
 	newData := map[string]Directory{}
 	addDirectory(fs.logger, newData, "/")
@@ -83,7 +83,7 @@ func (fs *S3FsCache) Refresh() (err error) {
 
 		// Add the object
 		if objName != "" { // "": obj is the directory itself
-			fs.logger.Printf("+ file: %s/%s\n", objDir, objName)
+			fs.logger.Debug("file", zap.String("dir", objDir), zap.String("name", objName))
 
 			fsCopy := newData[objDir]
 			fsCopy.Files[objName] = File{
@@ -96,7 +96,7 @@ func (fs *S3FsCache) Refresh() (err error) {
 
 	fs.data = newData
 
-	fs.logger.Println("S3 cache updated")
+	fs.logger.Info("S3 cache updated")
 	return nil
 }
 
@@ -110,7 +110,7 @@ func normalizePath(p string) string {
 
 // Add directory
 // `dirPath` must be normalized
-func addDirectory(logger *log.Logger, outData map[string]Directory, dirPath string) {
+func addDirectory(logger *zap.Logger, outData map[string]Directory, dirPath string) {
 	// Split dirPath into its path components
 	dirs := strings.Split(dirPath[1:], "/") // [1:]: skip leading /
 
@@ -118,7 +118,7 @@ func addDirectory(logger *log.Logger, outData map[string]Directory, dirPath stri
 	for _, curr := range dirs {
 		currPath := path.Join(parentPath, curr)
 		if _, ok := outData[currPath]; !ok {
-			logger.Printf("+  dir: %s\n", currPath)
+			logger.Debug("dir", zap.String("path", currPath))
 
 			// Add to parent Node
 			parentNode := outData[parentPath]
