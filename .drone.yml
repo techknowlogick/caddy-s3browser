@@ -23,6 +23,7 @@ steps:
     - mc config host add test http://objectstorage:9000 51bcaa680ac2fa4bb9f38bde4bf6f5620c542222393f95e2e6f6d38f838e3c17 51bcaa680ac2fa4bb9f38bde4bf6f5620c542222393f95e2e6f6d38f838e3c17
     - mc ls test
     - mc mb test/s3browser-test
+    - mkdir -p ./test
     - echo "test file 1" > test/main.txt
     - echo "test file 12" > test/one.txt
     - echo "test file 123" > test/second.txt
