@@ -1,10 +1,10 @@
 :80
 
-route {
-	log {
-		output stderr
-	}
+log {
+	output stderr
+}
 
+route {
 	s3browser {
 		site_name "${S3_SITENAME}" # S3 Browser
 		endpoint "${S3_ENDPOINT}"
