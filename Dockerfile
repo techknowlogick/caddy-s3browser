@@ -21,7 +21,7 @@ RUN mkdir -p /go/src/github.com/caddyserver/caddy && \
     cp /go/bin/caddy /install/caddy
 # last copy command is for backwards compatibility
 
-FROM alpine:3.11
+FROM alpine:3.12
 EXPOSE 80
 
 RUN apk add --no-cache wget mailcap ca-certificates gettext libintl && \
