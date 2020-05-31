@@ -128,6 +128,9 @@ table {
 tr {
 	border-bottom: 1px dashed #dadada;
 }
+tr.current {
+	background-color: #eeffee;
+}
 tbody tr:hover {
 	background-color: #ffffec;
 }
@@ -286,7 +289,7 @@ footer {
 					</tr>
 					{{- end}}
 					{{ range $dir := .Dir.RenderedDirs }}
-						<tr class="file">
+						<tr class="file {{ $dir.Class }}">
 							<td class="hideable"></td>
 							<td class="name">
 								{{- /* Prevent spaces from being rendered due to white-space: pre */ -}}
@@ -306,7 +309,7 @@ footer {
 						</tr>
 					{{ end }}
 					{{ range $file := .Dir.RenderedFiles }}
-						<tr class="file">
+						<tr class="file {{ $file.Class }}">
 							<td class="hideable"></td>
 							<td class="name">
 								{{- /* Prevent spaces from being rendered due to white-space: pre */ -}}

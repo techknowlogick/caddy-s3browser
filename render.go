@@ -25,6 +25,7 @@ const getCustomizationTimeout = time.Second * 5
 type customizationEntry struct {
 	Icon        string
 	Description string
+	Class       string
 }
 
 type customizationConfig struct {
@@ -42,6 +43,7 @@ type RenderizableItem struct {
 	Name        string
 	Icon        string
 	Description string
+	Class       string
 }
 
 type RenderizableDir struct {
@@ -128,6 +130,7 @@ func (dir *Directory) Render(semSort bool) {
 			rd.Name = name
 			rd.Icon = defaultDirConfig.Icon
 			rd.Description = defaultDirConfig.Description
+			rd.Class = defaultDirConfig.Class
 			rd.version, _ = semver.NewVersion(name)
 			dir.RenderedDirs[i] = rd
 		}
@@ -154,6 +157,7 @@ func (dir *Directory) Render(semSort bool) {
 					}
 					rd.Description = cust.Pattern.ReplaceAllString(rd.Name, entry.Description)
 					rd.Icon = entry.Icon
+					rd.Class = entry.Class
 					break
 				}
 			}
@@ -168,6 +172,7 @@ func (dir *Directory) Render(semSort bool) {
 			rd.Name = name
 			rd.Icon = defaultFileConfig.Icon
 			rd.Description = defaultFileConfig.Description
+			rd.Class = defaultFileConfig.Class
 			rd.Bytes = details.Bytes
 			rd.Date = details.Date
 			dir.RenderedFiles[i] = rd

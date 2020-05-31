@@ -6,7 +6,8 @@
 		},
 		"latest": {
 			"description": "Current Release $1",
-			"icon": "current"
+			"icon": "current",
+			"class": "current"
 		}
 	},
 	"^([0-9]+\\.[0-9]+\\.[0-9]+)-(rc[0-9]+)$": {
