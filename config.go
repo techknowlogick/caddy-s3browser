@@ -8,19 +8,20 @@ import (
 )
 
 type Config struct {
-	SiteName          string
-	Endpoint          string
-	Region            string
-	Key               string
-	Secret            string
-	Secure            bool
-	Bucket            string
-	APISecret         string
-	Refresh           time.Duration
-	Debug             bool
-	SignedURLRedirect bool
-	SemanticSort      bool
-	SkipServing       bool
+	SiteName           string
+	Endpoint           string
+	Region             string
+	Key                string
+	Secret             string
+	Secure             bool
+	Bucket             string
+	APISecret          string
+	Refresh            time.Duration
+	Debug              bool
+	SignedURLRedirect  bool
+	SemanticSort       bool
+	SkipServing        bool
+	AllowCustomization bool
 }
 
 func ParseConfig(c *caddy.Controller) (cfg Config, err error) {
@@ -62,6 +63,8 @@ func ParseConfig(c *caddy.Controller) (cfg Config, err error) {
 			cfg.SemanticSort, err = parseBoolArg(c)
 		case "skip_serving":
 			cfg.SkipServing, err = parseBoolArg(c)
+		case "allow_customization":
+			cfg.AllowCustomization, err = parseBoolArg(c)
 		default:
 			err = c.Errf("not a valid s3browser option")
 		}

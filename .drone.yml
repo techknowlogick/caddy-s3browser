@@ -23,33 +23,35 @@ steps:
     - mc config host add test http://objectstorage:9000 51bcaa680ac2fa4bb9f38bde4bf6f5620c542222393f95e2e6f6d38f838e3c17 51bcaa680ac2fa4bb9f38bde4bf6f5620c542222393f95e2e6f6d38f838e3c17
     - mc ls test
     - mc mb test/s3browser-test
-    - echo "test file 1" > main.txt
-    - echo "test file 12" > one.txt
-    - echo "test file 123" > second.txt
-    - echo "test file 1234" > another.txt
-    - echo "test file 12345" > last.txt
+    - mkdir -p ./test
+    - echo "test file 1" > test/main.txt
+    - echo "test file 12" > test/one.txt
+    - echo "test file 123" > test/second.txt
+    - echo "test file 1234" > test/another.txt
+    - echo "test file 12345" > test/last.txt
     - mc policy set download test/s3browser-test
-    - mc cp main.txt test/s3browser-test
-    - mc cp second.txt test/s3browser-test
-    - mc cp one.txt test/s3browser-test/one/
-    - mc cp another.txt test/s3browser-test/one/
+    - mc cp ./s3-customize-test.json test/s3browser-test/.s3-customize.json
+    - mc cp ./test/main.txt test/s3browser-test
+    - mc cp ./test/second.txt test/s3browser-test
+    - mc cp ./test/one.txt test/s3browser-test/one/
+    - mc cp ./test/another.txt test/s3browser-test/one/
     #- mc mb test/s3browser-test/one/two/
     #- mc mb test/s3browser-test/one/two/three/
     #- mc mb test/s3browser-test/one/two/three/four/
-    #- mc cp another.txt test/s3browser-test/one/two
-    #- mc cp another.txt test/s3browser-test/one/two/three
-    - mc cp last.txt test/s3browser-test/one/two/three/four/
+    #- mc cp ./test/another.txt test/s3browser-test/one/two
+    #- mc cp ./test/another.txt test/s3browser-test/one/two/three
+    - mc cp ./test/last.txt test/s3browser-test/one/two/three/four/
     #- mc rm test/s3browser-test/one/two/another.txt
     #- mc rm test/s3browser-test/one/two/three/another.txt
-    - mc cp one.txt test/s3browser-test/1.1.0/
-    - mc cp one.txt test/s3browser-test/1.1/
-    - mc cp one.txt test/s3browser-test/1/
-    - mc cp one.txt test/s3browser-test/1.2.0/
-    - mc cp one.txt test/s3browser-test/1.2.0-dev/
-    - mc cp one.txt test/s3browser-test/1.10.0/
-    - mc cp one.txt test/s3browser-test/1.10/
-    - mc cp one.txt test/s3browser-test/1.10.0-rc1/
-    - mc cp one.txt test/s3browser-test/1.11.0/
+    - mc cp ./test/one.txt test/s3browser-test/1.1.0/
+    - mc cp ./test/one.txt test/s3browser-test/1.1/
+    - mc cp ./test/one.txt test/s3browser-test/1/
+    - mc cp ./test/one.txt test/s3browser-test/1.2.0/
+    - mc cp ./test/one.txt test/s3browser-test/1.2.0-dev/
+    - mc cp ./test/one.txt test/s3browser-test/1.10.0/
+    - mc cp ./test/one.txt test/s3browser-test/1.10/
+    - mc cp ./test/one.txt test/s3browser-test/1.10.0-rc1/
+    - mc cp ./test/one.txt test/s3browser-test/1.11.0/
 
   - name: compile-and-run
     image: golang:1.14-alpine
@@ -70,6 +72,7 @@ steps:
       S3_SIGNED_URL_REDIRECT: true
       S3_SKIP_SERVING: true
       S3_SEMANTIC_SORT: true
+      S3_ALLOW_CUSTOMIZATION: true
       GO111MODULE: on
     commands:
     - apk add wget mailcap ca-certificates gettext libintl curl git
@@ -80,9 +83,9 @@ steps:
     - go mod edit -replace github.com/techknowlogick/caddy-s3browser=/drone/src
     - go install -v .
     - /go/bin/caddy -version
-    - "envsubst < /drone/src/Caddyfile.tmpl > /drone/src/Caddyfile"
-    - cat /drone/src/Caddyfile
-    - /go/bin/caddy -conf /drone/src/Caddyfile &
+    - "envsubst < /drone/src/Caddyfile.tmpl > /drone/src/test/Caddyfile"
+    - cat /drone/src/test/Caddyfile
+    - /go/bin/caddy -conf /drone/src/test/Caddyfile &
     - sleep 6
     - "curl -v localhost"
     - "curl -v -H \"Accept: application/json\" localhost"

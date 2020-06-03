@@ -3,17 +3,8 @@ package s3browser
 import (
 	"html/template"
 	"path"
-	"regexp"
-	"sort"
 	"strings"
-
-	"github.com/Masterminds/semver"
 )
-
-// semVerRegex is the regular expression used to parse a partial semantic version.
-// We rely on github.com/Masterminds/semver for the actual parsing, but
-// we want to consider the edge cases 1.0.0 vs. 1.0 vs 1.
-var semVerRegex = regexp.MustCompile(`^v?([0-9]+)(\.[0-9]+)?(\.[0-9]+)?`)
 
 type TemplateArgs struct {
 	SiteName     string
@@ -26,46 +17,14 @@ type Crumb struct {
 	Name string
 }
 
-type collection []*semver.Version
-
 func parseTemplate() (*template.Template, error) {
 	funcs := template.FuncMap{
-		"SemSort":     semSort,
 		"Breadcrumbs": breadcrumbs,
 		"PathBase":    path.Base,
 		"PathDir":     path.Dir,
 		"PathJoin":    path.Join,
 	}
 	return template.New("listing").Funcs(funcs).Parse(defaultTemplate)
-}
-
-func semSort(args TemplateArgs, folders []string) []string {
-	// No sorting if disabled
-	if !args.SemanticSort {
-		return folders
-	}
-
-	// Create one list with semver named folders, and one with the others
-	internal := make([]*semver.Version, 0, len(folders))
-	unversioned := make([]string, 0)
-	for _, folder := range folders {
-		version, err := semver.NewVersion(folder)
-		if err != nil {
-			// Folders not matching a version number go last
-			unversioned = append(unversioned, folder)
-			continue
-		}
-		internal = append(internal, version)
-	}
-
-	sort.Sort(collection(internal))
-
-	versioned := make([]string, len(internal))
-	for i := range internal {
-		versioned[i] = internal[i].Original()
-	}
-
-	return append(versioned, unversioned...)
 }
 
 func breadcrumbs(args TemplateArgs) []Crumb {
@@ -86,28 +45,6 @@ func breadcrumbs(args TemplateArgs) []Crumb {
 	}
 
 	return crumbs
-}
-
-func (c collection) Len() int {
-	return len(c)
-}
-
-func (c collection) Less(i, j int) bool {
-	// Note: this function sorts backwards;
-	// we invert j with i
-	if c[i].Equal(c[j]) {
-		// 1.1 is less than 1.1.0
-		mi := semVerRegex.FindStringSubmatch(c[i].Original())
-		mj := semVerRegex.FindStringSubmatch(c[j].Original())
-		if mi != nil && mj != nil {
-			return len(mj[0]) < len(mi[0])
-		}
-	}
-	return c[j].LessThan(c[i])
-}
-
-func (c collection) Swap(i, j int) {
-	c[i], c[j] = c[j], c[i]
 }
 
 const defaultTemplate = `<!DOCTYPE html>
@@ -191,17 +128,20 @@ table {
 tr {
 	border-bottom: 1px dashed #dadada;
 }
+tr.current {
+	background-color: #eeffee;
+}
 tbody tr:hover {
 	background-color: #ffffec;
 }
 th,
 td {
 	text-align: left;
-	padding: 10px 0;
+	padding: 10px;
+	vertical-align: text-top;
 }
 th {
-	padding-top: 15px;
-	padding-bottom: 15px;
+	padding: 15px 10px;
 	font-size: 16px;
 	white-space: nowrap;
 }
@@ -215,25 +155,22 @@ td {
 	white-space: nowrap;
 	font-size: 14px;
 }
-td:nth-child(2) {
-	width: 80%;
+td.description {
+	width: auto;
 }
-td:nth-child(3) {
-	padding: 0 20px 0 20px;
-}
-th:nth-child(4),
-td:nth-child(4) {
+th.size,
+td.size {
 	text-align: right;
 }
-td:nth-child(2) svg {
+td.name svg {
 	position: absolute;
+	font-size: 140%;
+	margin-top: -0.1ex;
 }
 td .name,
 td .goup {
-	margin-left: 1.75em;
-	word-break: break-all;
-	overflow-wrap: break-word;
-	white-space: pre-wrap;
+	margin-left: 2.35em;
+	white-space: pre;
 }
 .icon {
 	margin-right: 5px;
@@ -264,14 +201,6 @@ footer {
 	.hideable {
 		display: none;
 	}
-	td:nth-child(2) {
-		width: auto;
-	}
-	th:nth-child(3),
-	td:nth-child(3) {
-		padding-right: 5%;
-		text-align: right;
-	}
 	h1 {
 		color: #000;
 	}
@@ -288,15 +217,39 @@ footer {
 	<body>
 		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="0" width="0" style="position: absolute;">
 			<defs>
-				<!-- Folder -->
+				<!-- "folder": normal looking folder -->
 				<g id="folder" fill-rule="nonzero" fill="none">
 					<path d="M285.22 37.55h-142.6L110.9 0H31.7C14.25 0 0 16.9 0 37.55v75.1h316.92V75.1c0-20.65-14.26-37.55-31.7-37.55z" fill="#FFA000"/>
 					<path d="M285.22 36H31.7C14.25 36 0 50.28 0 67.74v158.7c0 17.47 14.26 31.75 31.7 31.75H285.2c17.44 0 31.7-14.3 31.7-31.75V67.75c0-17.47-14.26-31.75-31.7-31.75z" fill="#FFCA28"/>
 				</g>
-				<!-- File -->
+				<!-- "file": normal looking file -->
 				<g id="file" stroke="#000" stroke-width="25" fill="#FFF" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
 					<path d="M13 24.12v274.76c0 6.16 5.87 11.12 13.17 11.12H239c7.3 0 13.17-4.96 13.17-11.12V136.15S132.6 13 128.37 13H26.17C18.87 13 13 17.96 13 24.12z"/>
 					<path d="M129.37 13L129 113.9c0 10.58 7.26 19.1 16.27 19.1H249L129.37 13z"/>
+				</g>
+				<!-- "current": folder with a green tilde inside (meant for the current release, like 1.11.6) -->
+				<g id="current" fill-rule="nonzero" fill="none">
+					<path style="fill:#ffa000;stroke-width:1.00025" d="M 285.292,37.559481 H 142.656 L 110.92799,1.7359907e-6 H 31.708001 C 14.253597,1.7359907e-6 0,16.904267 0,37.559481 V 112.67844 H 317 V 75.118957 C 317,54.463744 302.73639,37.559481 285.292,37.559481 Z" />
+					<path style="fill:#ffca28;stroke-width:1.00025" d="M 285.292,36.009088 H 31.708001 C 14.253597,36.009088 0,50.292693 0,67.757101 V 226.49717 c 0,17.47439 14.263599,31.75801 31.708001,31.75801 H 285.27198 c 17.44441,0 31.70801,-14.30362 31.70801,-31.75801 V 67.767106 c 0,-17.474413 -14.2636,-31.758015 -31.70801,-31.758015 z" />
+					<path style="fill:#00aa00;stroke-width:12.1622" d="m 250.19279,113.55876 -97.29813,97.29812 -48.64883,-48.64929 18.24315,-18.24314 30.40568,30.4057 79.05453,-79.054991 z" fill-rule="evenodd" />
+				</g>
+				<!-- "working": a folder with a gear icon inside (meant for the current working branches like 1, 1.12, 1.12.0-dev, 1.12.0-rc1) -->
+				<g id="working" fill-rule="nonzero" fill="none">
+					<path style="fill:#ffa000;stroke-width:1.00025" d="M 285.292,37.559481 H 142.656 L 110.92799,1.7359907e-6 H 31.708001 C 14.253597,1.7359907e-6 0,16.904267 0,37.559481 V 112.67844 H 317 V 75.118957 C 317,54.463744 302.73639,37.559481 285.292,37.559481 Z" />
+					<path style="fill:#ffca28;stroke-width:1.00025" d="M 285.292,36.009088 H 31.708001 C 14.253597,36.009088 0,50.292693 0,67.757101 V 226.49717 c 0,17.47439 14.263599,31.75801 31.708001,31.75801 H 285.27198 c 17.44441,0 31.70801,-14.30362 31.70801,-31.75801 V 67.767106 c 0,-17.474413 -14.2636,-31.758015 -31.70801,-31.758015 z" />
+					<path style="fill:#7b7b7b;stroke-width:1.00025" d="M 235.76019,164.49959 V 139.5103 h -20.24143 c -1.42673,-6.24505 -3.91685,-12.06575 -7.22395,-17.32448 l 14.34987,-14.34903 -17.68045,-17.666867 -14.34246,14.335447 c -5.26449,-3.30628 -11.08518,-5.79515 -17.33106,-7.2219 V 77.040811 H 148.30142 V 97.28347 c -6.24711,1.42675 -12.06656,3.91562 -17.33231,7.23384 L 116.62008,90.169923 98.953224,107.83679 113.30267,122.18582 c -3.31205,5.25873 -5.80216,11.07943 -7.22972,17.32448 H 85.831113 v 24.98929 h 20.241427 c 1.42756,6.2471 3.91109,12.06739 7.22395,17.32654 l -14.343266,14.34779 17.668916,17.68045 14.34697,-14.34986 c 5.26575,3.30709 11.0852,5.7972 17.33231,7.22396 v 20.24143 h 24.98929 v -20.24143 c 6.24628,-1.42676 12.05956,-3.91687 17.32571,-7.22396 l 14.34781,14.34986 17.68045,-17.68045 -14.34987,-14.34779 c 3.3071,-5.27233 5.79722,-11.07944 7.22395,-17.32654 z m -74.96413,18.74175 c -17.25238,0 -31.23597,-13.98442 -31.23597,-31.23599 0,-17.25362 13.98359,-31.23434 31.23597,-31.23434 17.25239,0 31.23516,13.98072 31.23516,31.23434 4e-4,17.25116 -13.98236,31.23599 -31.23516,31.23599 z" />
+				</g>
+				<!-- "release": a dimmed folder with a dimmed green tilde inside (meant for official releases other than the latest, like 1.10.5, 1.11.0, 1.11.5) -->
+				<g id="release" fill-rule="nonzero" fill="none">
+					<path style="fill:#ffd48b;stroke-width:1.00025" d="M 285.292,37.559481 H 142.656 L 110.92799,1.7359907e-6 H 31.708001 C 14.253597,1.7359907e-6 0,16.904267 0,37.559481 V 112.67844 H 317 V 75.118957 C 317,54.463744 302.73639,37.559481 285.292,37.559481 Z" />
+					<path style="fill:#ffe596;stroke-width:1.00025" d="M 285.292,36.009088 H 31.708001 C 14.253597,36.009088 0,50.292693 0,67.757101 V 226.49717 c 0,17.47439 14.263599,31.75801 31.708001,31.75801 H 285.27198 c 17.44441,0 31.70801,-14.30362 31.70801,-31.75801 V 67.767106 c 0,-17.474413 -14.2636,-31.758015 -31.70801,-31.758015 z" />
+					<path style="fill:#8abc8a;stroke-width:12.1622" d="m 250.19279,113.55876 -97.29813,97.29812 -48.64883,-48.64929 18.24315,-18.24314 30.40568,30.4057 79.05453,-79.054991 z" />
+				</g>
+				<!-- "older": a grayed out folder with a gear icon inside (mean for older working branches or RC, like 1.10, 1.11, 1.11.0-rc1) -->
+				<g id="older" fill-rule="nonzero" fill="none">
+					<path style="fill:#808080;stroke-width:1.00025" d="M 285.292,37.559481 H 142.656 L 110.92799,1.7359907e-6 H 31.708001 C 14.253597,1.7359907e-6 0,16.904267 0,37.559481 V 112.67844 H 317 V 75.118957 C 317,54.463744 302.73639,37.559481 285.292,37.559481 Z" />
+					<path style="fill:#cccccc;stroke-width:1.00025" d="M 285.292,36.009088 H 31.708001 C 14.253597,36.009088 0,50.292693 0,67.757101 V 226.49717 c 0,17.47439 14.263599,31.75801 31.708001,31.75801 H 285.27198 c 17.44441,0 31.70801,-14.30362 31.70801,-31.75801 V 67.767106 c 0,-17.474413 -14.2636,-31.758015 -31.70801,-31.758015 z" />
+					<path style="fill:#808080;stroke-width:1.00025" d="M 235.76019,164.49959 V 139.5103 h -20.24143 c -1.42673,-6.24505 -3.91685,-12.06575 -7.22395,-17.32448 l 14.34987,-14.34903 -17.68045,-17.666867 -14.34246,14.335447 c -5.26449,-3.30628 -11.08518,-5.79515 -17.33106,-7.2219 V 77.040811 H 148.30142 V 97.28347 c -6.24711,1.42675 -12.06656,3.91562 -17.33231,7.23384 L 116.62008,90.169923 98.953224,107.83679 113.30267,122.18582 c -3.31205,5.25873 -5.80216,11.07943 -7.22972,17.32448 H 85.831113 v 24.98929 h 20.241427 c 1.42756,6.2471 3.91109,12.06739 7.22395,17.32654 l -14.343266,14.34779 17.668916,17.68045 14.34697,-14.34986 c 5.26575,3.30709 11.0852,5.7972 17.33231,7.22396 v 20.24143 h 24.98929 v -20.24143 c 6.24628,-1.42676 12.05956,-3.91687 17.32571,-7.22396 l 14.34781,14.34986 17.68045,-17.68045 -14.34987,-14.34779 c 3.3071,-5.27233 5.79722,-11.07944 7.22395,-17.32654 z m -74.96413,18.74175 c -17.25238,0 -31.23597,-13.98442 -31.23597,-31.23599 0,-17.25362 13.98359,-31.23434 31.23597,-31.23434 17.25239,0 31.23516,13.98072 31.23516,31.23434 4e-4,17.25116 -13.98236,31.23599 -31.23516,31.23599 z" />
 				</g>
 			</defs>
 		</svg>
@@ -312,58 +265,66 @@ footer {
 				<table aria-describedby="summary">
 					<thead>
 					<tr>
-						<th></th>
-						<th>
-							Name
-						</th>
-						<th>
-							Size
-						</th>
-						<th class="hideable">
-							Modified
-						</th>
+						<th class="hideable"></th>
+						<th class="name">Name</th>
+						<th class="description">Description</th>
+						<th class="size">Size</th>
+						<th class="date hideable">Modified</th>
 						<th class="hideable"></th>
 					</tr>
 					</thead>
 					<tbody>
 					{{ if ne .Dir.Path "/" }}
 					<tr>
-						<td></td>
-						<td>
+						<td class="hideable"></td>
+						<td class="goup">
 							<a href="{{ html (PathDir .Dir.Path) }}">
-								<span class="goup">Go up</span>
+								Go up
 							</a>
 						</td>
-						<td>&mdash;</td>
-						<td class="hideable">&mdash;</td>
+						<td class="description">&mdash;</td>
+						<td class="size">&mdash;</td>
+						<td class="date hideable">&mdash;</td>
 						<td class="hideable"></td>
 					</tr>
 					{{- end}}
-					{{ range $name := SemSort $ .Dir.Folders }}
-						<tr class="file">
-							<td></td>
-							<td>
-								<a href="{{ html (PathJoin $.Dir.Path $name) }}">
-									<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 317 259"><use xlink:href="#folder"></use></svg>
-									<span class="name">{{ html $name }}</span>
+					{{ range $dir := .Dir.RenderedDirs }}
+						<tr class="file {{ $dir.Class }}">
+							<td class="hideable"></td>
+							<td class="name">
+								{{- /* Prevent spaces from being rendered due to white-space: pre */ -}}
+								<a href="{{ html (PathJoin $.Dir.Path $dir.Name) }}"{{ if ne $dir.Description "" }} title="{{ $dir.Description }}"{{- end}}>
+								{{- /* */ -}}
+								<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 317 259"><use xlink:href="#{{$dir.Icon}}"></use></svg>
+								{{- /* */ -}}
+								<span class="name">{{ html $dir.Name }}</span>
+								{{- /* */ -}}
 								</a>
+								{{- /* */ -}}
 							</td>
-							<td>&mdash;</td>
-							<td class="hideable">&mdash;</td>
+							<td class="description">{{ $dir.Description }}</td>
+							<td class="size">&mdash;</td>
+							<td class="date hideable">&mdash;</td>
 							<td class="hideable"></td>
 						</tr>
 					{{ end }}
-					{{ range $name, $info := .Dir.Files }}
-						<tr class="file">
-							<td></td>
-							<td>
-								<a href="{{ html (PathJoin $.Dir.Path $name) }}">
-									<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 265 323"><use xlink:href="#file"></use></svg>
-									<span class="name">{{html $name}}</span>
+					{{ range $file := .Dir.RenderedFiles }}
+						<tr class="file {{ $file.Class }}">
+							<td class="hideable"></td>
+							<td class="name">
+								{{- /* Prevent spaces from being rendered due to white-space: pre */ -}}
+								<a href="{{ html (PathJoin $.Dir.Path $file.Name) }}">
+									{{- /* */ -}}
+									<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 265 323"><use xlink:href="#{{ $file.Icon }}"></use></svg>
+									{{- /* */ -}}
+									<span class="name">{{html $file.Name}}</span>
+									{{- /* */ -}}
 								</a>
+								{{- /* */ -}}
 							</td>
-							<td>{{ $info.HumanSize }}</td>
-							<td class="hideable"><time datetime="{{ $info.HumanModTime "2006-01-02T15:04:05Z" }}">{{ $info.HumanModTime "01/02/2006 03:04:05 PM -07:00" }}</time></td>
+							<td class="description">{{ $file.Description }}</td>
+							<td class="size">{{ $file.HumanSize }}</td>
+							<td class="date hideable"><time datetime="{{ $file.HumanModTime "2006-01-02T15:04:05Z" }}">{{ $file.HumanModTime "01/02/2006 03:04:05 PM -07:00" }}</time></td>
 							<td class="hideable"></td>
 						</tr>
 					{{- end}}

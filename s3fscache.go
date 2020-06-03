@@ -12,17 +12,22 @@ import (
 )
 
 type S3FsCache struct {
-	lock   sync.RWMutex
-	s3     *S3Client
-	logger *log.Logger
-	bucket string
-	data   map[string]Directory
+	lock               sync.RWMutex
+	s3                 *S3Client
+	logger             *log.Logger
+	bucket             string
+	data               map[string]Directory
+	semSort            bool
+	allowCustomization bool
 }
 
 type Directory struct {
-	Path    string
-	Folders []string
-	Files   map[string]File
+	Path                string
+	Folders             []string
+	Files               map[string]File
+	renderCustomization []*customizationConfig
+	RenderedDirs        []*RenderizableDir
+	RenderedFiles       []*RenderizableFile
 }
 
 type File struct {
@@ -43,8 +48,10 @@ func (f File) HumanModTime(format string) string {
 
 func NewS3Cache(cfg Config, l *log.Logger) (fs *S3FsCache, err error) {
 	return &S3FsCache{
-		s3:     NewS3Client(cfg),
-		logger: l,
+		s3:                 NewS3Client(cfg),
+		logger:             l,
+		semSort:            cfg.SemanticSort,
+		allowCustomization: cfg.AllowCustomization,
 	}, nil
 }
 
@@ -83,16 +90,31 @@ func (fs *S3FsCache) Refresh() (err error) {
 
 		// Add the object
 		if objName != "" { // "": obj is the directory itself
-			fs.logger.Printf("+ file: %s/%s\n", objDir, objName)
+			if fs.allowCustomization && objName == customizationFile {
+				fs.logger.Printf("+ customization file: %s/%s\n", objDir, objName)
+				if renderCustomization := getRenderCustomization(fs.logger, fs.s3, obj); renderCustomization != nil {
+					fsCopy := newData[objDir]
+					fsCopy.renderCustomization = renderCustomization
+					newData[objDir] = fsCopy
+				}
+			} else {
+				fs.logger.Printf("+ file: %s/%s\n", objDir, objName)
 
-			fsCopy := newData[objDir]
-			fsCopy.Files[objName] = File{
-				Bytes: obj.Size,
-				Date:  obj.LastModified,
+				fsCopy := newData[objDir]
+				fsCopy.Files[objName] = File{
+					Bytes: obj.Size,
+					Date:  obj.LastModified,
+				}
+				newData[objDir] = fsCopy
 			}
-			newData[objDir] = fsCopy
 		}
 	})
+
+	for k := range newData {
+		dir := newData[k]
+		dir.Render(fs.semSort)
+		newData[k] = dir
+	}
 
 	fs.data = newData
 
@@ -127,9 +149,10 @@ func addDirectory(logger *log.Logger, outData map[string]Directory, dirPath stri
 
 			// Add own Node
 			outData[currPath] = Directory{
-				Path:    currPath,
-				Folders: []string{},
-				Files:   map[string]File{},
+				Path:                currPath,
+				Folders:             []string{},
+				Files:               map[string]File{},
+				renderCustomization: parentNode.renderCustomization,
 			}
 		}
 
