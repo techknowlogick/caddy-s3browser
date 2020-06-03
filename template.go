@@ -293,7 +293,7 @@ footer {
 							<td class="hideable"></td>
 							<td class="name">
 								{{- /* Prevent spaces from being rendered due to white-space: pre */ -}}
-								<a href="{{ html (PathJoin $.Dir.Path $dir.Name) }}"{{ if ne $dir.Description "" }} title="{{ $dir.Description }}{{- end}}">
+								<a href="{{ html (PathJoin $.Dir.Path $dir.Name) }}"{{ if ne $dir.Description "" }} title="{{ $dir.Description }}"{{- end}}>
 								{{- /* */ -}}
 								<svg width="1.5em" height="1em" version="1.1" viewBox="0 0 317 259"><use xlink:href="#{{$dir.Icon}}"></use></svg>
 								{{- /* */ -}}
