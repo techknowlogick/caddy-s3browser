@@ -62,7 +62,7 @@ steps:
       GO111MODULE: on
     commands:
     - apk add wget mailcap ca-certificates gettext libintl curl git
-    - xcaddy build --output=/usr/bin/caddy --with github.com/techknowlogick/caddy-s3browser=/drone/src
+    - xcaddy build --output /usr/bin/caddy --with github.com/techknowlogick/caddy-s3browser=/drone/src
     - /usr/bin/caddy version
     - "envsubst < /drone/src/Caddyfile.tmpl > /drone/src/Caddyfile"
     - cat /drone/src/Caddyfile
