@@ -27,7 +27,7 @@ See `Caddyfile.tmpl` for a template.
 | secret              | string |            | S3 secret key |
 | secure              |  bool  |   `true`   | Use TLS when connection to S3 |
 | bucket              | string |            | S3 bucket |
-| refresh             | string |    `5m`    | Time between periodic refresh |
+| refresh_interval    | string |    `5m`    | Time between periodic refresh |
 | refresh_api_secret  | string |   empty    | A key to protect the refresh API. (optional) |
 | debug               |  bool  |   `false`  | Output debug information |
 | signed_url_redirect |  bool  |   `false`  | Output debug information |
