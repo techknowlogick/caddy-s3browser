@@ -43,7 +43,7 @@ steps:
     #- mc rm test/s3browser-test/one/two/three/another.txt
 
   - name: compile-and-run
-    image: golang:1.14-alpine
+    image: caddy:2.2.1-builder-alpine
     environment:
       S3_SITENAME: "Test Site"
       S3_REGION: us-east-1
@@ -62,18 +62,11 @@ steps:
       GO111MODULE: on
     commands:
     - apk add wget mailcap ca-certificates gettext libintl curl git
-    - mkdir -p /go/src/github.com/caddyserver/caddy
-    - cd /go/src/github.com/caddyserver/caddy
-    - wget https://raw.githubusercontent.com/caddyserver/caddy/v2.0.0/cmd/caddy/main.go
-    - sed -i '/plug in Caddy modules here/a _ "github.com/techknowlogick/caddy-s3browser"' main.go
-    - go mod init caddy
-    - go get github.com/caddyserver/caddy/v2@v2.0.0
-    - go mod edit -replace github.com/techknowlogick/caddy-s3browser=/drone/src
-    - go install -v .
-    - /go/bin/caddy version
+    - xcaddy build --output /usr/bin/caddy --with github.com/techknowlogick/caddy-s3browser=/drone/src
+    - /usr/bin/caddy version
     - "envsubst < /drone/src/Caddyfile.tmpl > /drone/src/Caddyfile"
     - cat /drone/src/Caddyfile
-    - /go/bin/caddy start -config /drone/src/Caddyfile
+    - /usr/bin/caddy start -config /drone/src/Caddyfile
     - sleep 6
     - "curl -v localhost"
     - "curl -v -H \"Accept: application/json\" localhost"
