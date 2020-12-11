@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/caddyserver/caddy/v2"
@@ -52,7 +53,7 @@ type S3Browser struct {
 	RefreshAPISecret  string        `json:"refresh_api_secret,omitempty"`
 	Debug             bool          `json:"debug,omitempty"`
 	SignedURLRedirect bool          `json:"signed_url_redirect,omitempty"`
-	SemanticSort      bool          `json:"semantic_sort,omitempty"`
+	SortAlgorithm     string        `json:"sort_algorithm,omitempty"`
 
 	s3Cache        S3FsCache
 	template       *template.Template
@@ -96,8 +97,8 @@ func (b *S3Browser) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 			err = parseBoolArg(d, &b.Debug)
 		case "signed_url_redirect":
 			err = parseBoolArg(d, &b.SignedURLRedirect)
-		case "semantic_sort":
-			err = parseBoolArg(d, &b.SemanticSort)
+		case "sort_algorithm":
+			err = parseStringArg(d, &b.SortAlgorithm)
 		default:
 			err = d.Errf("not a valid s3browser option")
 		}
@@ -112,15 +113,27 @@ func (b *S3Browser) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 func (b *S3Browser) Provision(ctx caddy.Context) (err error) {
 	b.log = ctx.Logger(b)
 
+	var s3Sorter *S3FsSorter
+	if b.SortAlgorithm != "" {
+		const reverse_prefix = "reverse-"
+		reverse := strings.HasPrefix(b.SortAlgorithm, reverse_prefix)
+		if reverse {
+			b.SortAlgorithm = b.SortAlgorithm[len(reverse_prefix):]
+		}
+
+		s3Sorter, err = NewS3FsSorter(b.SortAlgorithm, reverse)
+		if err != nil {
+			return err
+		}
+	}
+
 	{
 		b.log.Debug("Initializing S3 Cache")
 		// Manually create the client so we can check the error
 		c, err := NewS3Client(b.Endpoint, b.Key, b.Secret, b.Secure, b.Bucket)
 		if err == nil {
-			b.s3Cache, err = NewS3Cache(c, b.log)
-			if err == nil {
-				err = b.s3Cache.Refresh()
-			}
+			b.s3Cache = NewS3FsCache(c, s3Sorter, b.log)
+			err = b.s3Cache.Refresh()
 		}
 		if err != nil {
 			return err

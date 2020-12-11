@@ -50,6 +50,8 @@ steps:
     - mc cp one.txt test/s3browser-test/1.10/
     - mc cp one.txt test/s3browser-test/1.10.0-rc1/
     - mc cp one.txt test/s3browser-test/1.11.0/
+    - mc cp one.txt test/s3browser-test/not-a-version-abc/
+    - mc cp one.txt test/s3browser-test/not-a-version-xyz/
 
   - name: compile-and-run
     image: caddy:2.2.1-builder-alpine
@@ -68,7 +70,7 @@ steps:
       S3_REFRESH: 25s
       S3_REFRESH_SECRET: "secret"
       S3_SIGNED_URL_REDIRECT: true
-      S3_SEMANTIC_SORT: true
+      S3_SORT_ALGORITHM: "reverse-semver"
       GO111MODULE: on
     commands:
     - apk add wget mailcap ca-certificates gettext libintl curl git
