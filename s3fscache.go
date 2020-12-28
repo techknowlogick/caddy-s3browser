@@ -14,20 +14,27 @@ import (
 type S3FsCache struct {
 	lock   sync.RWMutex
 	s3     S3Client
+	sorter *S3FsSorter
 	logger *zap.Logger
 	bucket string
 	data   map[string]Directory
 }
 
 type Directory struct {
-	Path    string
-	Folders []string
-	Files   map[string]File
+	Path      string
+	Folders   []string
+	Filenames []string
+	files     map[string]File
 }
 
 type File struct {
 	Bytes int64
 	Date  time.Time
+}
+
+// Caller must ensure file exists.
+func (d Directory) GetFile(fileName string) File {
+	return d.files[fileName]
 }
 
 // HumanSize returns the size of the file as a human-readable string
@@ -41,11 +48,12 @@ func (f File) HumanModTime(format string) string {
 	return f.Date.Format(format)
 }
 
-func NewS3Cache(client S3Client, l *zap.Logger) (fs S3FsCache, err error) {
+func NewS3FsCache(client S3Client, sorter *S3FsSorter, l *zap.Logger) S3FsCache {
 	return S3FsCache{
 		s3:     client,
+		sorter: sorter,
 		logger: l,
-	}, nil
+	}
 }
 
 func (fs *S3FsCache) GetDir(dirPath string) (Directory, bool) {
@@ -62,8 +70,8 @@ func (fs *S3FsCache) GetFile(filePath string) (File, bool) {
 		return File{}, false
 	}
 
-	file, ok := dir.Files[fileName]
-	return file, ok
+	file := dir.GetFile(fileName)
+	return file, file != File{}
 }
 
 func (fs *S3FsCache) Refresh() (err error) {
@@ -86,13 +94,21 @@ func (fs *S3FsCache) Refresh() (err error) {
 			fs.logger.Debug("file", zap.String("dir", objDir), zap.String("name", objName))
 
 			fsCopy := newData[objDir]
-			fsCopy.Files[objName] = File{
+			fsCopy.files[objName] = File{
 				Bytes: obj.Size,
 				Date:  obj.LastModified,
 			}
+			fsCopy.Filenames = append(fsCopy.Filenames, objName)
 			newData[objDir] = fsCopy
 		}
 	})
+
+	if fs.sorter != nil {
+		for _, dir := range newData {
+			fs.sorter.Sort(dir.Folders)
+			fs.sorter.Sort(dir.Filenames)
+		}
+	}
 
 	fs.data = newData
 
@@ -127,9 +143,10 @@ func addDirectory(logger *zap.Logger, outData map[string]Directory, dirPath stri
 
 			// Add own Node
 			outData[currPath] = Directory{
-				Path:    currPath,
-				Folders: []string{},
-				Files:   map[string]File{},
+				Path:      currPath,
+				Folders:   []string{},
+				Filenames: []string{},
+				files:     map[string]File{},
 			}
 		}
 

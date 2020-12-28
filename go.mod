@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	cloud.google.com/go v0.71.0 // indirect
+	github.com/Masterminds/semver/v3 v3.1.0
 	github.com/antlr/antlr4 v0.0.0-20201029161626-9a95f0cc3d7c // indirect
 	github.com/caddyserver/caddy/v2 v2.2.1
 	github.com/dgraph-io/badger v1.6.2 // indirect

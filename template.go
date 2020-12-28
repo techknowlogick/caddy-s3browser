@@ -218,8 +218,8 @@ footer {
 		max-width: 100px;
 	}
 }
-<!-- template source from https://github.com/caddyserver/caddy/blob/a2d71bdd94c0ca51dfb3b816b61911dac799581f/caddyhttp/browse/setup.go -->
 </style>
+<!-- template source from https://github.com/caddyserver/caddy/blob/a2d71bdd94c0ca51dfb3b816b61911dac799581f/caddyhttp/browse/setup.go -->
 	</head>
 	<body>
 		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="0" width="0" style="position: absolute;">
@@ -289,7 +289,8 @@ footer {
 							<td class="hideable"></td>
 						</tr>
 					{{ end }}
-					{{ range $name, $info := .Dir.Files }}
+					{{ range $name := .Dir.Filenames }}
+						{{ $info := $.Dir.GetFile $name }}
 						<tr class="file">
 							<td></td>
 							<td>
