@@ -151,6 +151,7 @@ func (dir *Directory) Render(semSort bool) {
 					// is considered "latest"
 					if !latest[i] {
 						latest[i] = true
+						rd.Latest = true
 						if cust.Latest != nil {
 							entry = cust.Latest
 						}
