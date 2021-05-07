@@ -10,8 +10,7 @@ Use [xcaddy](https://github.com/caddyserver/xcaddy) to build.
 
 Example:
 ````bash
-$ go get -u github.com/caddyserver/xcaddy/cmd/xcaddy
-$ xcaddy build --output ./caddy --with github.com/techknowlogick/caddy-s3browser
+$ xcaddy build --output ./caddy --with github.com/techknowlogick/caddy-s3browser@main
 ````
 
 ## Configuration
